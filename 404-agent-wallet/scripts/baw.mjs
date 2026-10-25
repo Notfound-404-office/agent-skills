@@ -14,6 +14,7 @@ const address = value => typeof value === 'string' && /^0x[0-9a-f]{40}$/i.test(v
 const txHash = value => typeof value === 'string' && /^0x[0-9a-f]{64}$/i.test(value);
 const id = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,256}$/.test(value);
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const transactionValue = value => typeof value === 'string' && /^(0|[1-9][0-9]*)$/.test(value) && BigInt(value) < (1n << 256n);
 
 function attemptPath(inspected, dependencies) {
   const directory = dependencies.attemptsRoot ?? join(homedir(), '.local', 'state', 'protocol404', 'baw-attempts');
@@ -112,7 +113,7 @@ function statePath(opts) {
 async function readState(path) {
   const state = JSON.parse(await requirePrivateFile(path, 'BAW state'));
   if (state?.version !== 1 || state.file !== path || state.chainId !== 56 || !id(state.requestId) || !address(state.from)
-    || !id(state.authorizationId) || !address(state.call?.to) || state.call?.value !== '0'
+    || !id(state.authorizationId) || !address(state.call?.to) || !transactionValue(state.call?.value)
     || !Number.isFinite(state.expiresAt)
     || !['preview', 'executing', 'unknown', 'pending_confirmation', 'broadcasted'].includes(state.phase)) throw new Error('INVALID_BAW_STATE');
   validatePreview(state.preview);
@@ -177,7 +178,8 @@ export async function previewBaw(opts, dependencies = {}) {
     if (previous && previous.phase !== 'preview') throw new Error('BAW_ALREADY_ATTEMPTED: reconcile the existing request; do not submit again');
     const packetText = await requirePrivateFile(opts.packet, 'authorization packet');
     const inspected = await inspect(opts);
-    if (inspected.chainId !== 56 || inspected.call.value !== '0') throw new Error('ONLY_BSC_ZERO_VALUE_AUTHORIZATION_SUPPORTED');
+    if (inspected.chainId !== 56) throw new Error('ONLY_BSC_CHAIN_SUPPORTED');
+    if (!transactionValue(inspected.call.value)) throw new Error('INVALID_BAW_TRANSACTION_VALUE');
     if (!inspected.intent) throw new Error('LOCAL_INTENT_REQUIRED: use the packet and intent file produced together by prepare');
     await notAttempted(attemptPath(inspected, dependencies));
     const from = await walletAccess(run, opts.from, now);

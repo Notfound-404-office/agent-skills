@@ -221,7 +221,7 @@ protocol404 baw status [--state FILE] [--tx-hash HASH]
 
 BAW must be configured in the Binance App with Developer Mode enabled. If `baw wallet settings --json` does not report `data.devMode.enabled: true`, stop and tell the user to enable it in the App.
 
-The adapter is restricted to BSC chain ID `56` and zero transaction value: BAW supplies Gas and NFT eligibility, not protocol payment value. Preview validates the packet again, checks NFT eligibility for mint, estimates the call locally, then invokes the official shape:
+The adapter is restricted to BSC chain ID `56`. It preserves the exact transaction value encoded in the authorization packet, including a nonzero value when the authorized contract call requires it. Preview validates the packet again, checks NFT eligibility for mint, estimates the call locally, then invokes the official shape:
 
 ```text
 baw contract-call preview --binanceChainId 56 --from ... --to ... --value ... --inputData ... --json

@@ -15,7 +15,7 @@ Resolve scripts from this skill's actual loaded `SKILL.md` directory, regardless
 
 - Support BSC mainnet chain ID `56` only. Require a local verified deployment config for chain operations. Never invent a deployment address or reuse a Sepolia or Launchpad example as the 404 BSC deployment.
 - The bundled public deployment config is `config/bsc-mainnet-404.json`; pass it explicitly with `--config` after reviewing it. It contains no private keys.
-- Keep the 404 private wallet separate from the Binance Agentic Wallet. The local encrypted 404 seed owns private notes; BAW only supplies Gas, submits the prepared call, and satisfies the NFT mint gate. Do not introduce MetaMask.
+- Keep the 404 private wallet separate from the Binance Agentic Wallet. The local encrypted 404 seed owns private notes; BAW submits the prepared call, supplies gas, and may carry the exact value encoded by that call. Do not introduce MetaMask.
 - Preserve the existing ZK prover and circuits. Preparing an authorization may create a real proof locally; do not replace, bypass, or describe it as a mock.
 - Treat authorization packets and BAW preview state as bearer credentials. Store them only in private `0600` files under private `0700` directories.
 - Keep each packet with its hash-bound `.intent.json` file. Review its amount/recipient/action as well as the encoded call; the proof alone does not reveal all private intent. Do not delete attempt records to bypass duplicate-submission protection.

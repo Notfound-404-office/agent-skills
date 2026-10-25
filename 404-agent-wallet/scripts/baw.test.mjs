@@ -57,6 +57,16 @@ test('preview uses exact official BSC flags and exposes risks without full calld
   assert.equal(f.calls.some(args => args[1] === 'execute'), false);
 });
 
+test('preview preserves a valid nonzero transaction value from the packet', async t => {
+  const f = await fixture(t);
+  const inspected = { ...f.inspected, call: { ...f.inspected.call, value: '10000000000' } };
+  await previewBaw(f.opts, { ...f.deps, inspect: async () => inspected });
+  assert.deepEqual(f.calls.find(args => args[0] === 'contract-call'), [
+    'contract-call', 'preview', '--binanceChainId', '56', '--from', from,
+    '--to', target, '--value', '10000000000', '--inputData', '0x12345678', '--gasLimit', '10000000',
+  ]);
+});
+
 test('expiry accepts Binance ISO dates with timezone offsets', async t => {
   const devModeExpiresAt = isoWithOffset(now() + 600_000);
   const previewExpiresAt = isoWithOffset(now() + 120_000);
@@ -163,7 +173,7 @@ test('unknown execution is frozen before BAW and blocks retries', async t => {
 test('wrong chain and expired previews cannot execute', async t => {
   const f = await fixture(t);
   f.inspected.chainId = 11155111;
-  await assert.rejects(previewBaw(f.opts, f.deps), /ONLY_BSC/);
+  await assert.rejects(previewBaw(f.opts, f.deps), /ONLY_BSC_CHAIN/);
   assert.equal(f.calls.length, 0);
   f.inspected.chainId = 56;
   await previewBaw(f.opts, f.deps);
