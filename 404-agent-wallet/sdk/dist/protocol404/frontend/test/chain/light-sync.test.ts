@@ -25,14 +25,18 @@ function fixture() {
   return { keys, note, cm, tree, ciphertext };
 }
 
-function server(options: { badRoot?: boolean; badPath?: boolean; staleCursor?: boolean; anchorHash?: Hex } = {}) {
+function server(options: {
+  badRoot?: boolean; badPath?: boolean; staleCursor?: boolean; anchorHash?: Hex;
+  nextIndex?: string; interruptCursor?: string; spent?: boolean;
+} = {}) {
   const data = fixture();
   const seen: string[] = [];
   const root = options.badRoot ? data.tree.root() + 1n : data.tree.root();
   const canonicalHash = options.anchorHash ?? blockHash;
+  const nextIndex = options.nextIndex ?? '4';
   const anchor = {
     version: 1, chainId: 56, pool: poolAddress, blockNumber: '10', blockHash: canonicalHash, timestamp: '100',
-    root: root.toString(), nextIndex: '4', nullifierCount: '0', nullifierDigest: zeroHash, transactionDigest: zeroHash,
+    root: root.toString(), nextIndex, nullifierCount: '0', nullifierDigest: zeroHash, transactionDigest: zeroHash,
   };
   const fetcher = async (input: string | URL | Request) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
@@ -44,11 +48,13 @@ function server(options: { badRoot?: boolean; badPath?: boolean; staleCursor?: b
     });
     if (url.pathname === '/pool/notes') {
       const cursor = url.searchParams.get('cursor');
-      if (cursor === '4') throw new Error('completed cursor must not fetch notes');
+      if (options.interruptCursor === cursor) throw new Error('simulated scan interruption');
+      if (cursor === nextIndex) throw new Error('completed cursor must not fetch notes');
+      if (nextIndex === '8' && cursor === '4') return Response.json({ checkpoint: anchor, notes: [], nextCursor: '8', done: true });
       return Response.json({
         checkpoint: anchor,
         notes: [{ leafIndex: '3', commitment: data.cm.toString(), ciphertext: data.ciphertext, blockNumber: '9', transactionHash: txHash }],
-        nextCursor: options.staleCursor ? cursor : '4', done: !options.staleCursor,
+        nextCursor: options.staleCursor ? cursor : '4', done: !options.staleCursor && nextIndex !== '8',
       });
     }
     throw new Error(`unexpected path ${url.pathname}`);
@@ -60,20 +66,22 @@ function server(options: { badRoot?: boolean; badPath?: boolean; staleCursor?: b
     getLogs: async () => [],
   };
   const pool = { read: {
-    currentRoot: async () => data.tree.root(), nextIndex: async () => 4n, nullifierCount: async () => 0n,
-    nullifierDigest: async () => zeroHash, transactionDigest: async () => zeroHash, nullified: async () => false,
+    currentRoot: async () => data.tree.root(), nextIndex: async () => BigInt(nextIndex), nullifierCount: async () => 0n,
+    nullifierDigest: async () => zeroHash, transactionDigest: async () => zeroHash, nullified: async () => options.spent ?? false,
   } };
   const config = { chain: { id: 56 }, deployBlock: 1n, contracts: { pool: poolAddress }, noteIndexerUrls: ['https://indexer.example'] };
   return { data, seen, fetcher: fetcher as typeof fetch, connection: { client, pool, config } as unknown as PoolConnection };
 }
 
-test('discovers an owned note only after verifying its anchored Merkle path', async () => {
+test('discovers an owned note before fetching its path, then verifies the anchored path on demand', async () => {
   const { data, seen, fetcher, connection } = server();
   const snapshot = await syncLightPrivateNotes(connection, data.keys, undefined, { fetch: fetcher, store: new MemoryLightCheckpointStore() });
 
   assert.equal(snapshot.owned.length, 1);
   assert.equal(snapshot.owned[0]!.note.value, 42n);
   assert.equal(snapshot.tree.root(), data.tree.root());
+  assert.equal(seen.some(request => request.startsWith('/pool/path?')), false);
+  await (snapshot as typeof snapshot & { ensurePaths(indices: readonly number[]): Promise<void> }).ensurePaths([3]);
   assert.deepEqual(snapshot.tree.path(3), data.tree.path(3));
   assert.equal(seen.some(request => request.startsWith('/pool/path?')), true);
 });
@@ -89,6 +97,21 @@ test('encrypted checkpoint resume skips previously scanned pages and lazily rest
   assert.throws(() => snapshot.tree.path(3), /no witness/);
   await (snapshot as typeof snapshot & { ensurePaths(indices: readonly number[]): Promise<void> }).ensurePaths([3]);
   assert.deepEqual(snapshot.tree.path(3), second.data.tree.path(3));
+});
+
+test('saves each completed notes page and resumes after an interrupted scan', async () => {
+  const store = new MemoryLightCheckpointStore();
+  const first = server({ nextIndex: '8', interruptCursor: '4' });
+  await assert.rejects(
+    syncLightPrivateNotes(first.connection, first.data.keys, undefined, { fetch: first.fetcher, store }),
+    /simulated scan interruption/,
+  );
+
+  const second = server({ nextIndex: '8' });
+  await syncLightPrivateNotes(second.connection, second.data.keys, undefined, { fetch: second.fetcher, store });
+  const notesRequests = second.seen.filter(request => request.startsWith('/pool/notes?'));
+  assert.equal(notesRequests.length, 1);
+  assert.match(notesRequests[0]!, /cursor=4/);
 });
 
 test('a non-canonical saved anchor is discarded and discovery restarts from the safe block', async () => {
@@ -111,10 +134,24 @@ test('rejects an RPC-inconsistent checkpoint and a forged owned-note path', asyn
   );
 
   const badPath = server({ badPath: true });
+  const badPathSnapshot = await syncLightPrivateNotes(
+    badPath.connection, badPath.data.keys, undefined, { fetch: badPath.fetcher, store: new MemoryLightCheckpointStore() },
+  );
   await assert.rejects(
-    syncLightPrivateNotes(badPath.connection, badPath.data.keys, undefined, { fetch: badPath.fetcher, store: new MemoryLightCheckpointStore() }),
+    (badPathSnapshot as typeof badPathSnapshot & { ensurePaths(indices: readonly number[]): Promise<void> }).ensurePaths([3]),
     /Merkle path does not match root/,
   );
+});
+
+test('checks spent status before allowing a path fetch', async () => {
+  const spent = server({ spent: true });
+  const snapshot = await syncLightPrivateNotes(spent.connection, spent.data.keys, undefined, { fetch: spent.fetcher, store: new MemoryLightCheckpointStore() });
+  assert.equal(snapshot.unspent.length, 0);
+  await assert.rejects(
+    (snapshot as typeof snapshot & { ensurePaths(indices: readonly number[]): Promise<void> }).ensurePaths([3]),
+    /cannot fetch path for spent leaf/,
+  );
+  assert.equal(spent.seen.some(request => request.startsWith('/pool/path?')), false);
 });
 
 test('rejects a page cursor that does not advance', async () => {

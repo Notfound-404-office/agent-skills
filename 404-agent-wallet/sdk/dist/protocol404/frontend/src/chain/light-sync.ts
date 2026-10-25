@@ -14,8 +14,9 @@ import {
 
 const U32_LIMIT = 1n << 32n;
 const LEGACY_NOTE_CIPHERTEXT_LENGTH = 172;
-const PAGE_LIMIT = 256;
+const PAGE_LIMIT = 512;
 const STATUS_CONCURRENCY = 16;
+const PATH_CONCURRENCY = 8;
 const HASH = /^0x[0-9a-fA-F]{64}$/;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 const HEX = /^0x(?:[0-9a-fA-F]{2})*$/;
@@ -245,6 +246,14 @@ async function syncFromIndexer(
     tree.addWitness(index, expectedCommitment, body.path.map((sibling, depth) => decimal(sibling, `path[${depth}]`, BN254_FIELD_MODULUS - 1n)));
   };
 
+  const saveCheckpoint = async (): Promise<void> => {
+    await store.save(scope, {
+      version: LIGHT_CHECKPOINT_VERSION,
+      anchor: { blockNumber: target.blockNumber.toString(), blockHash: target.blockHash, timestamp: target.timestamp.toString() },
+      cursor: cursor.toString(), fromBlock: fromBlock.toString(), owned: owned.map(storeNote),
+    });
+  };
+
   while (cursor < target.nextIndex) {
     const body = record(await getJson(fetcher, base, 'pool/notes', {
       block: target.blockNumber.toString(), hash: target.blockHash, cursor: cursor.toString(), limit: String(PAGE_LIMIT), fromBlock: fromBlock.toString(),
@@ -265,13 +274,15 @@ async function syncFromIndexer(
         ?? decryptIncomingNote(bytes, item.commitment, keys, context, item.publicValue);
       if (!note) continue;
       if (ownedIndices.has(item.leafIndex)) throw new Error('duplicate owned note');
-      await fetchPath(item.leafIndex, item.commitment);
       const nf = noteNullifier(keys.nk, noteLocation(item.commitment, BigInt(item.leafIndex)));
       owned.push({ leafIndex: item.leafIndex, cm: item.commitment, note, nf, publicValue: item.publicValue !== undefined });
       ownedIndices.add(item.leafIndex);
     }
     if (body.done !== (nextCursor === target.nextIndex) || (body.done && nextCursor !== target.nextIndex)) throw new Error('notes page has inconsistent completion state');
     cursor = nextCursor;
+    // Persist every completed page. A later failure resumes at this cursor and
+    // never replays already committed discovery work.
+    await saveCheckpoint();
     onProgress?.(target.blockNumber, target.blockNumber);
   }
 
@@ -288,22 +299,22 @@ async function syncFromIndexer(
 
   const ensurePaths = async (indices: readonly number[]): Promise<void> => {
     const byIndex = new Map(owned.map(note => [note.leafIndex, note]));
-    for (const index of new Set(indices)) {
-      const note = byIndex.get(integer(index, 'leaf index', 0xffff_ffff));
+    const pending: Array<{ index: number; cm: bigint }> = [];
+    for (const rawIndex of new Set(indices)) {
+      const index = integer(rawIndex, 'leaf index', 0xffff_ffff);
+      const note = byIndex.get(index);
       if (!note) throw new Error(`cannot fetch path for unowned leaf ${index}`);
-      try { tree.path(index); } catch { await fetchPath(index, note.cm); }
+      if (note.note.value <= 0n || spent.has(note.nf)) throw new Error(`cannot fetch path for spent leaf ${index}`);
+      try { tree.path(index); } catch { pending.push({ index, cm: note.cm }); }
     }
+    await mapConcurrent(pending, PATH_CONCURRENCY, async ({ index, cm }) => fetchPath(index, cm));
   };
   const snapshot = {
     tree, owned, spent, executed, executedTransactions: transactions,
     unspent: owned.filter(note => note.note.value > 0n && !spent.has(note.nf)),
     head: { number: target.blockNumber, hash: target.blockHash, timestamp: target.timestamp }, ensurePaths,
   } as unknown as LightSnapshot;
-  await store.save(scope, {
-    version: LIGHT_CHECKPOINT_VERSION,
-    anchor: { blockNumber: target.blockNumber.toString(), blockHash: target.blockHash, timestamp: target.timestamp.toString() },
-    cursor: cursor.toString(), fromBlock: fromBlock.toString(), owned: owned.map(storeNote),
-  });
+  await saveCheckpoint();
   return snapshot;
 }
 
