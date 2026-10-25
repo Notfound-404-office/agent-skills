@@ -764,7 +764,7 @@ cm    = Poseidon2(D_NOTE, value + asset·2^64, inner)</pre>
 <pre class="doc-code">nf = Poseidon2(D_NF, nk, Poseidon2(D_LOC, cm, leafIndex))</pre>
               <p>Only the holder of the nullifier key <code>nk</code> can compute it, so whoever paid you cannot tell when you spend. The pool refuses any nullifier it has seen before: that is what prevents double spending.</p>
               <h2>Encrypted notes</h2>
-              <p>Every new note carries a 175-byte ciphertext (ChaCha20-Poly1305 to a one-time key). Your wallet tries each new note on chain and keeps the ones that open and whose commitment matches. Change and other notes you send to yourself use a separate key, so a receive-only view never sees them.</p>
+              <p>Every new note carries a 172-byte ciphertext (ChaCha20-Poly1305 to a one-time key). Your wallet tries each new note on chain and keeps the ones that open and whose commitment matches. Change and other notes you send to yourself use a separate key, so a receive-only view never sees them.</p>
               <h3>Open-value notes</h3>
               <p>Swap outputs and order payouts are only known when the contract runs. Their ciphertext leaves the amount out; the wallet reads it from the pool's public <code>Shielded</code> event and accepts the note only if the commitment matches.</p>
             </article>
@@ -974,7 +974,7 @@ owner_d = Poseidon2(D_OWNER, spendPub, nkc, d)</pre>
                   <tr><td>Decimals</td><td>8</td></tr>
                   <tr><td>BNB note unit</td><td>0.00000001 BNB (10<sup>10</sup> wei)</td></tr>
                   <tr><td>Tree depth</td><td>32</td></tr>
-                  <tr><td>Ciphertext</td><td>175 bytes per note</td></tr>
+                  <tr><td>Ciphertext</td><td>172 bytes per note</td></tr>
                   <tr data-archived="amm" hidden><td>Swap fee</td><td>0.3%</td></tr>
                 </tbody>
               </table>
