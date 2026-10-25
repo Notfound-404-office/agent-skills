@@ -1,0 +1,13 @@
+{
+  "nargo": {
+    "version": "1.0.0-beta.25",
+    "commit": "75061fab15986eedee4e7d9104ff87dd9fa4ca10",
+    "platform": "aarch64-apple-darwin",
+    "url": "https://github.com/noir-lang/noir/releases/download/v1.0.0-beta.25/nargo-aarch64-apple-darwin.tar.gz",
+    "sha256": "63ed453d09a65bfc78eef63252423126959d41c85de0da0cf54289c5e266ceb5"
+  },
+  "standard_library": "Provided by the pinned Nargo compiler; reference/stdlib/hash.nr is only a recovered source snapshot.",
+  "local_dependency": "transfer and hold both depend on ../pm_lib; no registry dependency is required.",
+  "build_verification": "compile.sh successfully rebuilds both circuits and requires exact ABI plus byte-for-byte equality of uncompressed ACIR against reference/*.json.",
+  "proof_backend": "The application currently uses the recovered Barretenberg WASM assets. No compatible bb CLI version is asserted by this reading package."
+}
