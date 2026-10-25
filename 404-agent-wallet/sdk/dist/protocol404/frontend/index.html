@@ -1,0 +1,1143 @@
+<!doctype html>
+<!-- translate="no": page translators send the page text (words, addresses, memos) to a server. -->
+<html lang="en" translate="no">
+  <head>
+    <!-- Local-safe placeholder. The deployment server replaces this policy from validated 404 config. -->
+    <meta id="app-csp" data-config="server-generated" http-equiv="Content-Security-Policy" content="default-src &#39;self&#39;; script-src &#39;self&#39; &#39;wasm-unsafe-eval&#39;; worker-src &#39;self&#39;; connect-src &#39;self&#39; data:; img-src &#39;self&#39; data:; style-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; form-action &#39;none&#39;">
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="dark light" />
+    <title>404</title>
+    <!-- 404 mark, sized for a browser tab. -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CclipPath id='s'%3E%3Cpath d='M10 50A40 40 0 1 0 90 50A40 40 0 1 0 10 50Z'/%3E%3C/clipPath%3E%3CclipPath id='a'%3E%3Cpath d='M0 0H48.25V100H0Z'/%3E%3C/clipPath%3E%3CclipPath id='b'%3E%3Cpath d='M51.75 0H100V100H51.75Z'/%3E%3C/clipPath%3E%3Cpattern id='h' patternUnits='userSpaceOnUse' x='4' width='8' height='8' patternTransform='rotate(-45)'%3E%3Crect width='3.6' height='8' fill='%23000'/%3E%3C/pattern%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='%23fff'/%3E%3Cg transform='translate(5 5) scale(.9)'%3E%3Cg clip-path='url(%23s)'%3E%3Cg clip-path='url(%23a)'%3E%3Crect width='100' height='100' fill='%23000'/%3E%3C/g%3E%3Cg clip-path='url(%23b)'%3E%3Crect width='100' height='100' fill='url(%23h)'/%3E%3Cpath d='M10 50A40 40 0 1 0 90 50A40 40 0 1 0 10 50Z' fill='none' stroke='%23000' stroke-width='8'/%3E%3C/g%3E%3C/g%3E%3C/g%3E%3C/svg%3E" />
+    <script type="module" src="/src/main.ts"></script>
+    <link rel="stylesheet" href="/src/ui/styles.css">
+  </head>
+  <!-- spellcheck off everywhere: enhanced spellcheckers upload what is typed (words, memos). -->
+  <body spellcheck="false" class="no-payer" data-assets>
+    <header class="topbar">
+      <a class="brand" href="#/" aria-label="404 home">
+        <span class="mark" aria-hidden="true"></span>
+        <span class="brand-name">404</span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Pages">
+        <a href="#/" data-route="home">Home</a>
+        <a href="#/mint" data-route="mint">Mint</a>
+        <a href="#/operation" data-route="operation">Operation</a>
+        <a href="#/market" data-route="market">Market</a>
+        <a href="#/profile" data-route="profile">Profile</a>
+        <a href="#/docs" data-route="docs">Docs</a>
+      </nav>
+      <div class="topbar-right">
+        <button type="button" id="network-retry" class="small ghost" hidden>Retry connection</button>
+        <label class="net-select" id="net-select" title="Network" hidden>
+          <span class="visually-hidden">Network</span>
+          <select id="network"></select>
+        </label>
+        <button type="button" id="authorization-open" class="small ghost" aria-haspopup="dialog">Submit package</button>
+        <button type="button" id="connect" class="small connect-btn" aria-haspopup="dialog">Connect</button>
+        <button type="button" id="wallet-btn" class="small primary">Open wallet</button>
+        <button type="button" id="lock" class="small ghost" title="Clears the keys from memory; unlocking needs the password again" hidden>Lock</button>
+      </div>
+    </header>
+    <main>
+      <!-- ------------------------------------------------------------ wallet bar (unlocked pages) -->
+      <div class="wallet-bar" id="wallet-bar" hidden>
+        <dl class="wb-figures">
+          <div><dt>Private</dt><dd><span id="bar-available">—</span><span id="bar-native">—</span></dd></div>
+          <div><dt>Public</dt><dd><span id="bar-public">—</span><span id="bar-public-native">—</span></dd></div>
+        </dl>
+        <div class="head-actions">
+          <span id="sync-status" class="pill" role="status"></span>
+          <details class="fee-settings">
+            <summary>Submit &amp; gas</summary>
+            <div class="fee-popover">
+              <p class="kicker" id="fee-settings-title">Wallet submission</p>
+              <div class="seg submission-mode" id="submission-mode" role="group" aria-label="Submission mode">
+                <button type="button" data-submission="submit" class="active" aria-pressed="true">Submit now</button>
+                <button type="button" data-submission="export" aria-pressed="false">Package only</button>
+              </div>
+              <label>Gas price (gwei)<input id="fee-gwei" inputmode="decimal" placeholder="Wallet default" autocomplete="off"></label>
+              <label>Gas limit<input id="fee-gas-limit" inputmode="numeric" placeholder="Estimate automatically" autocomplete="off"></label>
+              <p class="error" id="fee-settings-error" role="alert"></p>
+              <div class="row"><button type="button" class="small ghost" id="fee-reset">Restore wallet defaults</button></div>
+            </div>
+          </details>
+          <button type="button" class="icon-btn" id="mask-toggle" aria-pressed="false" title="Hide amounts">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path class="slash" d="M4 4l16 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            <span class="visually-hidden">Hide amounts</span>
+          </button>
+          <button type="button" class="icon-btn" id="sync-now" title="Sync now">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              <path d="M20 4.5V9h-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="visually-hidden">Sync</span>
+          </button>
+        </div>
+        <p class="note warn" id="pool-info"></p>
+        <p class="error" id="session-error" role="alert"></p>
+      </div>
+
+      <!-- ------------------------------------------------------------ home -->
+      <section id="page-home" class="page" data-page="home">
+        <div class="hero-split">
+          <div class="intro">
+            <h1 class="display">The native<br /><em>privacy protocol.</em></h1>
+            <div class="cta-row">
+              <a class="button primary" href="#/mint" data-mint-cta>Mint {token}</a>
+              <a class="button" href="#/profile" id="home-wallet-link">Open wallet</a>
+            </div>
+          </div>
+          <div class="frame hero-frame" aria-hidden="true">
+            <div class="dots-well"><canvas data-dots="hero" data-pitch="8"></canvas></div>
+          </div>
+        </div>
+
+        <!-- The story, then the vision: every row spans the content width. No mechanics: those are in Docs.
+             Cards: a faint ring around a hairline card, most with a dot-matrix scene (src/dots.ts). -->
+
+        <!-- 1. How money lost its privacy, in three ledgers. -->
+        <section class="home-section" aria-labelledby="eras-title">
+          <h2 class="home-title duo" id="eras-title">For most of history, <em>money was private by default.</em></h2>
+          <div class="home-row three">
+            <article class="frame">
+              <div class="frame-in">
+                <p class="era-step">01 · Cash</p>
+                <h3>No record</h3>
+                <p class="tile-text">No one could look up what you paid, who you paid, or what you had left.</p>
+                <div class="dots-well" aria-hidden="true"><canvas data-dots="cash"></canvas></div>
+              </div>
+            </article>
+            <article class="frame">
+              <div class="frame-in">
+                <p class="era-step">02 · Banks</p>
+                <h3>Every payment, a record</h3>
+                <p class="tile-text">Money went digital. Banks kept the ledger; at least it stayed behind their walls.</p>
+                <div class="dots-well" aria-hidden="true"><canvas data-dots="bank"></canvas></div>
+              </div>
+            </article>
+            <article class="frame">
+              <div class="frame-in">
+                <p class="era-step">03 · Public chains</p>
+                <h3>Readable by anyone</h3>
+                <p class="tile-text">Crypto promised to give money back to people. Instead it built the most transparent ledger in history.</p>
+                <div class="dots-well" aria-hidden="true"><canvas data-dots="public"></canvas></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 2. The glass house: what one search shows. -->
+        <section class="home-section" aria-labelledby="glass-title">
+          <article class="frame">
+            <div class="frame-in glass-in">
+              <div class="glass-text">
+                <h2 class="home-title" id="glass-title">That isn't freedom. It's a glass house.</h2>
+                <p>Every balance, every payment, every counterparty: public and permanent. On a public chain, all of it is one search away, forever.</p>
+                <ul class="tags" aria-label="What a public chain shows">
+                  <li>Your salary</li><li>Your savings</li><li>Who you support</li><li>Who you do business with</li>
+                </ul>
+              </div>
+              <div class="dots-well glass-well" aria-hidden="true"><canvas data-dots="glass" data-pitch="8"></canvas></div>
+            </div>
+          </article>
+        </section>
+
+        <!-- 3. Everywhere else, privacy is normal. -->
+        <section class="home-section" aria-labelledby="else-title">
+          <h2 class="home-title" id="else-title">We'd never accept this anywhere else.</h2>
+          <div class="home-row three">
+            <article class="frame">
+              <div class="frame-in norm">
+                <canvas class="dots-icon" data-pitch="7" data-dots="envelope" aria-hidden="true"></canvas>
+                <h3>Letters come in envelopes.</h3>
+              </div>
+            </article>
+            <article class="frame">
+              <div class="frame-in norm">
+                <canvas class="dots-icon" data-pitch="7" data-dots="record" aria-hidden="true"></canvas>
+                <h3>Medical records stay confidential.</h3>
+              </div>
+            </article>
+            <article class="frame">
+              <div class="frame-in norm">
+                <canvas class="dots-icon" data-pitch="7" data-dots="paper" aria-hidden="true"></canvas>
+                <h3>Nobody prints your bank statement in the newspaper.</h3>
+              </div>
+            </article>
+          </div>
+          <p class="home-question">Why should money be the one thing everyone can read?</p>
+        </section>
+
+        <!-- 4. The vision, then the name. -->
+        <section class="home-section band" aria-label="Vision">
+          <div class="band-text">
+            <p class="band-lead">Privacy isn't about having something to hide. It's about having a life that's yours.</p>
+            <p class="band-title">Public by default was a mistake.<br /><em>Private by default is the fix.</em></p>
+            <p class="band-sign">404. Live on BNB Smart Chain.</p>
+            <div class="cta-row">
+              <a class="button primary" href="#/mint" data-mint-cta>Mint {token}</a>
+              <a class="button" href="#/docs">Read the docs</a>
+            </div>
+          </div>
+          <div class="band-coin" aria-hidden="true"><canvas data-dots="coin"></canvas></div>
+        </section>
+
+        <!-- 5. What it does: four cards, each opening its page. -->
+        <section class="home-section" aria-labelledby="uses-title">
+          <div class="home-head">
+            <h2 class="home-title duo" id="uses-title">Use money <em>without being watched.</em></h2>
+            <a class="button" href="#/docs">Read the docs</a>
+          </div>
+          <div class="home-row two">
+            <article class="frame">
+              <div class="frame-in use">
+                <div class="use-head">
+                  <h3>Mint</h3>
+                  <a class="button explore" href="#/mint">Explore<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5" /></svg></a>
+                </div>
+                <p class="tile-text">Mint 404 to a private address with a ZK proof.</p>
+                <ul class="tags"><li>Free Mint</li><li>1 lot per transaction</li><li>10 mints per submitting wallet</li></ul>
+                <div class="dots-well" aria-hidden="true"><canvas data-dots="mint" data-pitch="7"></canvas></div>
+              </div>
+            </article>
+            <article class="frame">
+              <div class="frame-in use">
+                <div class="use-head">
+                  <h3>Send</h3>
+                  <a class="button explore" href="#/operation">Explore<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5" /></svg></a>
+                </div>
+                <p class="tile-text">Pay any 4041 address in {token} or BNB. Sender, recipient and amount stay hidden.</p>
+                <ul class="tags"><li>Private transfers</li><li>A new address per payer</li><li>Encrypted memos</li></ul>
+                <div class="dots-well" aria-hidden="true"><canvas data-dots="send" data-pitch="7"></canvas></div>
+              </div>
+            </article>
+            <article class="frame" data-archived="amm" hidden>
+              <div class="frame-in use">
+                <div class="use-head">
+                  <h3>Trade</h3>
+                  <a class="button explore" href="#/trade">Explore<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5" /></svg></a>
+                </div>
+                <p class="tile-text">Swap {token} and BNB straight from your private balance. Who swapped stays hidden.</p>
+                <ul class="tags"><li>Constant-product pool</li><li>0.3% swap fee</li><li>Slippage guard</li></ul>
+                <div class="dots-well" aria-hidden="true"><canvas data-dots="trade" data-pitch="7"></canvas></div>
+              </div>
+            </article>
+            <article class="frame">
+              <div class="frame-in use">
+                <div class="use-head">
+                  <h3>Market</h3>
+                  <a class="button explore" href="#/market">Explore<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5" /></svg></a>
+                </div>
+                <p class="tile-text">List and fill limit orders. The book shows prices, never who placed them.</p>
+                <ul class="tags"><li>Listings</li><li>Offers</li><li>One-time order keys</li></ul>
+                <div class="dots-well" aria-hidden="true"><canvas data-dots="market" data-pitch="7"></canvas></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- 6. Where it goes next. -->
+        <section class="home-section" aria-labelledby="roadmap-title">
+          <h2 class="home-title small" id="roadmap-title">Roadmap</h2>
+          <ol class="home-row three roadmap-cards">
+            <li class="frame done"><div class="frame-in"><b>Live</b><span>private mint · transfers · deposits and withdrawals</span></div></li>
+            <li class="frame done"><div class="frame-in"><b>Live</b><span>BNB notes · every fee in BNB · private order market</span></div></li>
+            <li class="frame"><div class="frame-in"><b>Next</b><span>Security audit · more wallet support</span></div></li>
+          </ol>
+        </section>
+      </section>
+
+      <!-- ------------------------------------------------------------ wallet gate: create / import / unlock -->
+      <section id="gate" class="page gate" hidden>
+        <div id="screen-onboard" class="card sheet" hidden>
+          <h2 class="title">Create or import a wallet</h2>
+          <div class="tabs" id="onboard-tabs" role="tablist">
+            <button type="button" data-tab="create" class="active">New wallet</button>
+            <button type="button" data-tab="mnemonic">Import 24 words</button>
+          </div>
+
+          <div data-pane="create">
+            <ol id="new-words" class="words"></ol>
+            <label class="check"><input type="checkbox" id="backed-up" /> I have written these 24 words down, in order, offline</label>
+          </div>
+          <div data-pane="mnemonic" hidden>
+            <label
+              >Recovery words
+              <textarea id="import-words" rows="4" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="24 words"></textarea>
+            </label>
+          </div>
+          <form id="onboard-form" autocomplete="off">
+            <label id="pw1-label"
+              ><span id="pw1-text">Password</span>
+              <input type="password" id="pw1" autocomplete="new-password" required placeholder="At least 8 characters" />
+            </label>
+            <label id="pw2-label">Repeat password<input type="password" id="pw2" autocomplete="new-password" /></label>
+            <button class="primary wide" id="onboard-submit">Save and open wallet</button>
+            <p class="error" id="onboard-error" role="alert"></p>
+          </form>
+        </div>
+
+        <div id="screen-unlock" class="card sheet" hidden>
+          <div class="emblem" aria-hidden="true"><span class="mark large"></span></div>
+          <h2 class="title center">Unlock wallet</h2>
+          <form id="unlock-form">
+            <label>Password<input type="password" id="unlock-pw" autocomplete="current-password" required /></label>
+            <button class="primary wide" id="unlock-submit">Unlock</button>
+            <p class="error" id="unlock-error" role="alert"></p>
+          </form>
+          <details class="danger-zone">
+            <summary>Forgot your password?</summary>
+            <button type="button" class="danger small" id="forget">Delete wallet from this device</button>
+          </details>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ mint -->
+      <section id="page-mint" class="page" data-page="mint" data-wallet hidden>
+        <header class="page-head">
+          <h1 class="page-title">Mint {token}</h1>
+        </header>
+        <div class="split-main">
+          <div class="card" id="mint-action-card">
+            <!-- NFT Mint creates a private output. -->
+            <div class="card-head mint-head" id="mint-source-row" hidden>
+              <p class="kicker">Pay from</p>
+              <div class="seg" id="mint-source" role="group" aria-label="Pay from">
+                <button type="button" data-source="private" class="active" aria-pressed="true">Private <span data-native>BNB</span></button>
+                <button type="button" data-source="public" aria-pressed="false">Public wallet</button>
+              </div>
+            </div>
+            <form data-pane="mint" class="action" data-source="public">
+              <p class="lead-note" id="mint-info"></p>
+              <div id="nft-mint-policy" class="field-hint" hidden>
+                <p id="nft-mint-status">Connect a public wallet to check access.</p>
+                <button type="button" class="small" id="claim-test-nft" hidden>Claim Sepolia test NFT</button>
+              </div>
+              <p class="note warn" id="portable-mint-warning" hidden>This deployed Mint contract binds the submitting wallet while proving. Portable Mint needs the upgraded pool; other private actions already support authorization packages.</p>
+              <div class="field">
+                <span>Lots</span>
+                <strong>1 per mint</strong>
+                <input type="hidden" id="mint-count" name="count" value="1" />
+              </div>
+              <label>To<input name="to" placeholder="This wallet" autocomplete="off" spellcheck="false" /></label>
+              <dl class="receipt" id="mint-total"></dl>
+              <p class="field-hint" id="mint-short"><span></span></p>
+              <p class="needs-payer">No wallet connected<button type="button" class="text-btn" data-connect>Connect</button></p>
+              <button class="primary wide" id="mint-submit">Pay and mint</button>
+              <p class="field-hint" id="mint-transaction" role="status" aria-live="polite" hidden></p>
+              <p class="error maskable" role="alert"></p>
+            </form>
+          </div>
+
+          <div class="col">
+            <div class="card">
+              <div class="card-head"><p class="kicker">Private address</p></div>
+              <code class="addr" id="mint-address"></code>
+              <div class="row"><button type="button" class="small" data-copy="mint-address">Copy</button></div>
+            </div>
+
+            <aside class="card supply" aria-label="Supply minted">
+              <div class="card-head"><p class="kicker">Supply minted</p></div>
+              <p class="supply-num"><span id="supply-minted">—</span><span id="supply-total"></span></p>
+              <progress id="supply-bar" max="1" value="0"></progress>
+              <div class="supply-meta"><span id="supply-pct"></span><span id="supply-left"></span></div>
+              <p class="pause-power" id="pause-power"></p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ operation -->
+      <section id="page-operation" class="page" data-page="operation" data-wallet hidden>
+        <header class="page-head">
+          <h1 class="page-title">Send &amp; deposit</h1>
+        </header>
+        <div class="grid">
+          <div class="col">
+            <div class="card actions">
+              <div class="card-head">
+                <span class="pill" id="prover-status"></span>
+              </div>
+              <!-- Private operations can be submitted now by a public wallet or exported as a portable package. -->
+              <div class="tabs grouped" id="action-tabs" role="tablist">
+                <div class="tab-group" aria-label="Private operations">
+                  <div class="tab-row">
+                    <button type="button" data-tab="send" class="active">Send</button>
+                    <button type="button" data-tab="receive">Receive</button>
+                    <button type="button" data-tab="withdraw">Withdraw</button>
+                    <button type="button" data-tab="consolidate">Merge</button>
+                  </div>
+                </div>
+                <div class="tab-group" aria-label="From your public wallet">
+                  <div class="tab-row">
+                    <button type="button" data-tab="deposit">Deposit</button>
+                  </div>
+                </div>
+              </div>
+              <div class="asset-row" id="asset-row">
+                <div class="seg" id="asset-switch" role="group" aria-label="Asset">
+                  <button type="button" data-asset="0" data-token class="active" aria-pressed="true">{token}</button>
+                  <button type="button" data-asset="1" data-native aria-pressed="false" id="asset-native">BNB</button>
+                </div>
+              </div>
+
+              <form data-pane="send" class="action">
+                <label>To<input name="to" placeholder="4041…" required autocomplete="off" spellcheck="false" /></label>
+                <label>Amount<input name="amount" inputmode="decimal" required autocomplete="off" /></label>
+                <p class="field-hint" data-hint="send"><span></span><button type="button" class="text-btn" data-max hidden>Max</button></p>
+                <label>Memo<span class="opt">Optional</span><input name="memo" maxlength="63" autocomplete="off" /></label>
+                <p class="note fee"></p>
+                <button class="primary wide">Prove and send</button>
+                <p class="error maskable" role="alert"></p>
+              </form>
+
+              <!-- The newest private address in full, then all of them: the same list as on Profile. -->
+              <div data-pane="receive" class="receive" hidden>
+                <code class="addr" id="address"></code>
+                <div class="row">
+                  <button type="button" class="small" data-copy="address">Copy</button>
+                  <button type="button" class="small ghost" id="new-address">New address</button>
+                </div>
+                <ol class="addr-list" id="receive-addr-list"></ol>
+              </div>
+
+              <form data-pane="withdraw" class="action" hidden>
+                <label>To<input name="recipient" placeholder="0x…" required autocomplete="off" spellcheck="false" /></label>
+                <label>Amount<input name="amount" inputmode="decimal" required autocomplete="off" /></label>
+                <p class="field-hint" data-hint="withdraw"><span></span><button type="button" class="text-btn" data-max hidden>Max</button></p>
+                <p class="note fee"></p>
+                <button class="primary wide">Prove and withdraw</button>
+                <p class="error maskable" role="alert"></p>
+              </form>
+
+              <form data-pane="consolidate" class="action" hidden>
+                <p class="lead-note" id="consolidate-info"></p>
+                <p class="note fee"></p>
+                <button class="primary wide">Prove and merge</button>
+                <p class="error maskable" role="alert"></p>
+              </form>
+
+              <form data-pane="deposit" class="action" data-needs="payer" hidden>
+                <label>Amount<input name="amount" inputmode="decimal" required autocomplete="off" /></label>
+                <p class="field-hint" data-hint="deposit"><span></span><button type="button" class="text-btn" data-max hidden>Max</button></p>
+                <p class="note deposit-fee" id="deposit-fee"></p>
+                <p class="needs-payer">No wallet connected<button type="button" class="text-btn" data-connect>Connect</button></p>
+                <button class="primary wide" id="deposit-submit">Sign and deposit</button>
+                <p class="error maskable" role="alert"></p>
+              </form>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card" id="pending-card" hidden>
+              <div class="card-head"><h2>Pending requests</h2></div>
+              <ul id="pending-list" class="pending-list"></ul>
+              <div id="damaged-records" class="damaged-records" hidden>
+                <p class="note warn" id="damaged-text"></p>
+                <button type="button" class="small danger" id="clear-damaged">Clear unreadable records</button>
+              </div>
+              <p class="error maskable" id="pending-error" role="alert"></p>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><h2>Activity</h2></div>
+              <ol id="log" class="log"></ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ market -->
+      <section id="page-market" class="page" data-page="market" hidden>
+        <header class="page-head market-head">
+          <h1 class="page-title">Market</h1>
+          <div class="row">
+            <button type="button" class="primary" id="list-open">List {token}</button>
+            <button type="button" id="offer-open">Make offer</button>
+          </div>
+        </header>
+        <dl class="live-stats market-stats" aria-label="Market">
+          <div><dt>Floor per {token}</dt><dd id="mk-floor">—</dd></div>
+          <div><dt>Best offer per {token}</dt><dd id="mk-offer">—</dd></div>
+          <div><dt>Listed</dt><dd id="mk-listed">—</dd></div>
+          <div><dt>Offered</dt><dd id="mk-offered">—</dd></div>
+        </dl>
+        <div class="market-bar">
+          <div class="seg" id="market-tabs" role="group" aria-label="Orders">
+            <button type="button" data-view="listings" class="active" aria-pressed="true">Listings<span class="seg-count" id="mk-listings-count"></span></button>
+            <button type="button" data-view="offers" aria-pressed="false">Offers<span class="seg-count" id="mk-offers-count"></span></button>
+            <button type="button" data-view="mine" aria-pressed="false" id="mk-mine-tab" hidden>My orders<span class="seg-count" id="my-orders-count"></span></button>
+          </div>
+          <div class="market-tools">
+            <select id="market-sort" aria-label="Sort">
+              <option value="price">Best price</option>
+              <option value="newest">Newest</option>
+              <option value="size">Largest</option>
+            </select>
+            <button type="button" class="icon-btn" id="book-refresh" title="Refresh">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <path d="M20 4.5V9h-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span class="visually-hidden">Refresh</span>
+            </button>
+          </div>
+        </div>
+        <div id="market-feedback"><p class="error maskable" id="my-orders-error" role="alert"></p></div>
+        <ul class="listings" id="listings"></ul>
+      </section>
+
+      <!-- ------------------------------------------------------------ trade -->
+      <section id="page-trade" class="page" data-page="trade" data-archived="amm" hidden>
+        <header class="page-head">
+          <h1 class="page-title">Swap</h1>
+        </header>
+        <div class="split-main">
+          <div class="card swap">
+            <form data-pane="swap" class="action" id="swap-form" autocomplete="off">
+              <div class="swap-leg">
+                <span class="label">You pay</span>
+                <div class="swap-row">
+                  <input name="amount" inputmode="decimal" placeholder="0" aria-label="Amount to pay" />
+                  <span class="token" id="swap-in-token">{token}</span>
+                </div>
+                <p class="field-hint" data-hint="swap"><span></span><button type="button" class="text-btn" data-max hidden>Max</button></p>
+              </div>
+              <button type="button" class="swap-flip" id="swap-flip" title="Swap direction" aria-label="Swap direction">
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 4v15m0 0-4-4m4 4 4-4M16 20V5m0 0-4 4m4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </button>
+              <div class="swap-leg">
+                <span class="label">You receive</span>
+                <div class="swap-row">
+                  <output class="maskable" id="swap-out">0</output>
+                  <span class="token" id="swap-out-token">BNB</span>
+                </div>
+              </div>
+              <dl class="receipt" id="swap-details">
+                <dt>Price</dt><dd id="swap-price">—</dd>
+                <dt>Price impact</dt><dd id="swap-impact">—</dd>
+                <dt>Minimum received</dt><dd class="maskable" id="swap-min">—</dd>
+              </dl>
+              <div class="slippage">
+                <span class="tab-group-label">Slippage</span>
+                <div class="seg" id="slippage" role="group" aria-label="Slippage tolerance">
+                  <button type="button" data-bps="10" aria-pressed="false">0.1%</button>
+                  <button type="button" data-bps="50" class="active" aria-pressed="true">0.5%</button>
+                  <button type="button" data-bps="100" aria-pressed="false">1%</button>
+                </div>
+              </div>
+              <p class="needs-wallet" id="swap-needs-wallet">Wallet locked<a class="text-btn" href="#/profile">Open wallet</a></p>
+              <button class="primary wide" id="swap-submit">Swap privately</button>
+              <p class="error maskable" role="alert"></p>
+            </form>
+          </div>
+          <aside class="col">
+            <div class="card">
+              <div class="card-head"><p class="kicker">Liquidity pool</p></div>
+              <dl class="kv">
+                <dt>{token} reserve</dt><dd id="pool-token">—</dd>
+                <dt><span data-native>BNB</span> reserve</dt><dd id="pool-native">—</dd>
+                <dt>Price</dt><dd id="pool-price">—</dd>
+                <dt>Swap fee</dt><dd>0.3%</dd>
+              </dl>
+            </div>
+            <div class="card" id="liquidity-card" hidden>
+              <div class="card-head"><p class="kicker">Treasury · liquidity</p></div>
+              <form id="liquidity-form" class="action" autocomplete="off">
+                <label><span data-token>{token}</span><input name="token" inputmode="decimal" placeholder="0" /></label>
+                <label><span data-native>BNB</span><input name="native" inputmode="decimal" placeholder="0" /></label>
+                <div class="row">
+                  <button class="small primary" data-liquidity="add">Add</button>
+                  <button type="button" class="small ghost" data-liquidity="remove">Remove</button>
+                </div>
+                <p class="error" role="alert"></p>
+              </form>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ a page this network has not opened yet -->
+      <section id="page-soon" class="page soon-page" data-page="soon" hidden>
+        <div class="card sheet">
+          <p class="kicker"><span class="dot" aria-hidden="true"></span>Open soon</p>
+          <h1 class="page-title" id="soon-title">Market</h1>
+          <p class="muted" data-soon-for="market">List and fill limit orders. The book shows prices, never who placed them.</p>
+          <p class="muted" data-soon-for="trade" data-archived="amm" hidden>Swap {token} and BNB straight from your private balance. Who swapped stays hidden.</p>
+          <div class="row">
+            <a class="button primary" href="#/mint" data-mint-cta>Mint {token}</a>
+            <a class="button" href="#/docs">Read the docs</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ the Mint page once every lot is minted (no wallet needed) -->
+      <section id="page-soldout" class="page soon-page" data-page="soldout" hidden>
+        <div class="card sheet">
+          <p class="kicker">Sold out</p>
+          <h1 class="page-title">Mint {token}</h1>
+          <p class="muted" id="soldout-line">Every lot is minted.</p>
+          <div class="row">
+            <a class="button primary" href="#/operation">Send privately</a>
+            <a class="button" href="#/profile">Open wallet</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ profile -->
+      <section id="page-profile" class="page" data-page="profile" data-wallet hidden>
+        <header class="page-head">
+          <h1 class="page-title">Your wallet</h1>
+        </header>
+        <div class="top-row">
+          <article class="card hero" aria-labelledby="balance-title">
+            <div class="card-head">
+              <h2 class="kicker" id="balance-title"><span class="dot"></span>Private balance</h2>
+            </div>
+            <div class="balances">
+              <p class="big maskable" id="bal-spendable">—</p>
+              <p class="big maskable" id="bal-native">—</p>
+            </div>
+            <dl class="stat-strip">
+              <div><dt>In progress</dt><dd id="bal-pending">—</dd></div>
+              <div><dt>Notes</dt><dd id="bal-notes">—</dd></div>
+              <div><dt>Public {token}</dt><dd id="bal-public">—</dd></div>
+            </dl>
+            <p class="locked-line" id="locked-line" hidden>Plus <span class="maskable" id="bal-locked">—</span> locked</p>
+            <p class="note" id="pending-link" hidden></p>
+          </article>
+
+          <aside class="card" id="payer-card">
+            <div class="card-head">
+              <h2>Public wallet</h2>
+              <span class="pill off" id="payer-state">Not connected</span>
+            </div>
+            <dl class="kv" id="pf-payer" hidden>
+              <dt>Account</dt><dd><code id="pf-payer-address"></code></dd>
+              <dt data-native>BNB</dt><dd><span class="maskable" id="pf-payer-native">—</span></dd>
+              <dt data-token>{token}</dt><dd><span class="maskable" id="pf-payer-token">—</span></dd>
+            </dl>
+            <button type="button" class="small" id="pf-connect" data-connect>Connect</button>
+            <!-- Only with the treasury's wallet connected: the mint payments waiting in the pool. -->
+            <div class="sweep" id="sweep-box" hidden>
+              <div class="sweep-row">
+                <p class="sweep-figure"><span class="label">Treasury · mint proceeds</span><span id="mint-proceeds">—</span></p>
+                <button type="button" class="small primary" id="sweep">Sweep</button>
+              </div>
+              <p class="error" role="alert"></p>
+            </div>
+          </aside>
+        </div>
+
+        <div class="grid">
+          <div class="col">
+            <div class="card">
+              <div class="card-head">
+                <h2>Notes<span class="count" id="notes-count"></span></h2>
+                <div class="seg" id="notes-filter" role="group" aria-label="Which notes to show">
+                  <button type="button" data-filter="unspent" class="active" aria-pressed="true">Unspent</button>
+                  <button type="button" data-filter="all" aria-pressed="false">All</button>
+                </div>
+              </div>
+              <div class="table-wrap notes-wrap">
+                <table class="notes">
+                  <thead>
+                    <tr><th>Note</th><th class="num">Amount</th><th>Status</th><th>Memo</th></tr>
+                  </thead>
+                  <tbody id="notes"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card">
+              <div class="card-head">
+                <h2>Private addresses<span class="count" id="addr-count"></span></h2>
+                <button type="button" class="small ghost" id="pf-new-address">New address</button>
+              </div>
+              <ol class="addr-list" id="addr-list"></ol>
+            </div>
+
+            <div class="card" id="security">
+              <div class="card-head"><h2>Security</h2></div>
+              <div class="row wrap">
+                <button type="button" class="small" id="show-words">Show recovery words</button>
+              </div>
+              <ol id="backup-words" class="words" hidden></ol>
+              <p class="error" id="security-error" role="alert"></p>
+              <details class="danger-zone">
+                <summary>Remove from this device</summary>
+                <button type="button" class="small danger" id="delete-wallet">Delete wallet from this device</button>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ docs: sidebar, one article, on this page -->
+      <section id="page-docs" class="page docs" data-page="docs" hidden>
+        <div class="docs-layout">
+          <nav class="docs-nav" id="docs-nav" aria-label="Documentation"></nav>
+          <div class="docs-main">
+            <label class="docs-select"><span class="visually-hidden">Page</span><select id="docs-select"></select></label>
+
+            <article class="doc" data-doc="overview" data-group="Getting started" data-title="Overview">
+              <h1>404</h1>
+              <p class="doc-lede">The native privacy protocol on BNB Smart Chain. What you hold, receive and send lives in private notes that only your wallet can open.</p>
+              <p class="doc-hint"><b>Replica notice.</b> 404 is a BNB Smart Chain privacy protocol for private notes and authorized transactions.</p>
+              <h2>How it fits together</h2>
+              <p>Everything private sits in one pool contract. Instead of balances, the pool keeps a tree of <b>notes</b>. Each note is stored as a commitment: a hash that hides its owner, asset and amount. To spend notes, your browser makes a zero-knowledge proof. A connected public wallet can submit it and pays only network gas, or you can export the fixed proof as an authorization package for another device.</p>
+<pre class="doc-code">Public wallet ──mint / deposit──▶ Pool ──▶ notes for your private address
+                                  │
+Your browser ──proof/package──▶ Public wallet ──▶ spend notes, create new ones
+                                  │
+                       withdraw ──▶ public {token} or BNB</pre>
+              <h2>What you can do</h2>
+              <table class="doc-table">
+                <thead><tr><th>Action</th><th>What happens</th></tr></thead>
+                <tbody>
+                  <tr><td>Mint</td><td>Mint one free lot into private notes; the submitting wallet pays network gas. Older paid pools display their configured on-chain price.</td></tr>
+                  <tr><td>Send</td><td>Pay any <code>4041</code> address in {token} or BNB. Sender, recipient and amount stay hidden.</td></tr>
+                  <tr><td>Deposit / Withdraw</td><td>Move funds between a public wallet and your private balance.</td></tr>
+                  <tr><td>Market</td><td>List, offer and fill limit orders without showing who trades.</td></tr>
+                </tbody>
+              </table>
+              <h2>Key numbers</h2>
+              <table class="doc-table">
+                <tbody>
+                  <tr><td>Supply</td><td>21,000,000 {token} in 21,000 lots</td></tr>
+                  <tr><td>Mint price</td><td>Free</td></tr>
+                  <tr><td>Per mint</td><td>Exactly 1 lot</td></tr>
+                  <tr><td>Submission cost</td><td>Network gas paid by the public wallet that submits</td></tr>
+                  <tr><td>Network</td><td>BNB Smart Chain (chain 56 or configured testnet), gas paid in BNB</td></tr>
+                </tbody>
+              </table>
+            </article>
+
+            <article class="doc" data-doc="quick-start" data-group="Getting started" data-title="Quick start" hidden>
+              <h1>Quick start</h1>
+              <p class="doc-lede">From nothing to a private balance in a few minutes.</p>
+              <h2>1. Create a wallet</h2>
+              <p>Open <b>Profile</b> and choose <b>New wallet</b>. Write the 24 words down in order and set a password. The words are the wallet; the password only unlocks the copy kept encrypted in this browser. On another device, import the same 24 words.</p>
+              <h2>2. Connect a public wallet</h2>
+              <p>Use <b>Connect</b> in the top bar to link OKX Wallet or another browser wallet. It adds BNB to your private balance. Your private balance never sits in it.</p>
+              <h2>3. Mint</h2>
+              <p>On <b>Mint</b>, each transaction mints exactly 1 free lot. The actual submitting wallet must hold the membership NFT, may mint at most 10 times and pays network gas only. You can instead create a package without connecting that wallet and submit it later from another device. The {token} arrive as a private note for this wallet, or for any <code>4041</code> address entered under <b>To</b>.</p>
+              <h2>4. Use your balance</h2>
+              <p>Send, receive and withdraw, and place or fill private limit orders. Choose <b>Submit now</b> to have a connected public wallet pay network gas, or <b>Package only</b> to copy the fixed proof to another device. The submitting wallet cannot change the action bound into the proof.</p>
+              <p class="doc-hint">Profile lists every private address you have made. Give each payer a new one: addresses cannot be linked to each other.</p>
+            </article>
+
+            <article class="doc" data-doc="notes" data-group="Concepts" data-title="Notes" hidden>
+              <h1>Notes</h1>
+              <p class="doc-lede">A note is a private coin: an amount of one asset that belongs to one private address.</p>
+              <h2>What a note holds</h2>
+              <table class="doc-table">
+                <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+                <tbody>
+                  <tr><td>Asset</td><td>0 for {token}, 1 for BNB</td></tr>
+                  <tr><td>Value</td><td>A 64-bit amount; BNB is counted in units of 0.00000001</td></tr>
+                  <tr><td>Owner</td><td>Derived from your keys and the address that was paid</td></tr>
+                  <tr><td>Lock time</td><td>0 for ordinary notes</td></tr>
+                  <tr><td>Randomness</td><td>Makes every note unique</td></tr>
+                  <tr><td>Memo</td><td>Up to 63 bytes, encrypted with the note</td></tr>
+                </tbody>
+              </table>
+              <h2>Commitments</h2>
+              <p>The pool never sees a note, only its commitment, built with the Poseidon2 hash:</p>
+<pre class="doc-code">inner = Poseidon2(D_INNER, owner, lockUntil, rcm)
+cm    = Poseidon2(D_NOTE, value + asset·2^64, inner)</pre>
+              <p>A deposit only sends <code>inner</code>. The contract adds the asset and the amount it actually received and computes <code>cm</code> itself, so minting and depositing need no proof.</p>
+              <h2>The note tree</h2>
+              <p>Commitments enter an append-only Merkle tree of depth 32, two leaves at a time. The contract remembers every root, so a proof can refer to any earlier state of the tree; the wallet uses the latest one.</p>
+              <h2>Nullifiers</h2>
+              <p>Spending a note publishes its nullifier:</p>
+<pre class="doc-code">nf = Poseidon2(D_NF, nk, Poseidon2(D_LOC, cm, leafIndex))</pre>
+              <p>Only the holder of the nullifier key <code>nk</code> can compute it, so whoever paid you cannot tell when you spend. The pool refuses any nullifier it has seen before: that is what prevents double spending.</p>
+              <h2>Encrypted notes</h2>
+              <p>Every new note carries a 172-byte ciphertext (ChaCha20-Poly1305 to a one-time key). Your wallet tries each new note on chain and keeps the ones that open and whose commitment matches. Change and other notes you send to yourself use a separate key, so a receive-only view never sees them.</p>
+              <h3>Open-value notes</h3>
+              <p>Swap outputs and order payouts are only known when the contract runs. Their ciphertext leaves the amount out; the wallet reads it from the pool's public <code>Shielded</code> event and accepts the note only if the commitment matches.</p>
+            </article>
+
+            <article class="doc" data-doc="keys" data-group="Concepts" data-title="Keys and addresses" hidden>
+              <h1>Keys and addresses</h1>
+              <p class="doc-lede">24 words make one wallet. One wallet has as many private addresses as you like.</p>
+              <h2>From words to keys</h2>
+              <p>The 24 words encode a 32-byte seed. Every key is derived from it with HKDF-SHA256:</p>
+              <table class="doc-table">
+                <thead><tr><th>Key</th><th>Used for</th></tr></thead>
+                <tbody>
+                  <tr><td><code>sk</code></td><td>Spending: proves you own your notes</td></tr>
+                  <tr><td><code>nk</code></td><td>Nullifiers: marks a note spent</td></tr>
+                  <tr><td><code>ivk</code></td><td>Incoming view: finds payments to any of your addresses</td></tr>
+                  <tr><td><code>ovk</code></td><td>Outgoing view: encrypts change and notes to yourself</td></tr>
+                </tbody>
+              </table>
+              <p>No key comes from an Ethereum signature, so no website can recreate your wallet by asking you to sign something.</p>
+              <h2>Private addresses</h2>
+              <p>An address is <code>4041…</code> followed by a diversifier <code>d</code>, a public key and an owner value:</p>
+<pre class="doc-code">pk_d    = ivk · G(d)                          (Ristretto255)
+owner_d = Poseidon2(D_OWNER, spendPub, nkc, d)</pre>
+              <p>Each <code>d</code> gives a new address. Addresses with different <code>d</code> cannot be linked to each other, yet <code>ivk</code> scans all of them at once.</p>
+              <p>The default address uses <code>pm/address/0</code>; <b>New address</b> takes <code>pm/address/1</code>, <code>2</code>, … in turn, so Profile can list them all again after you restore the 24 words. The wallet checks the first 256 for payments.</p>
+              <p class="doc-hint">Each address ends with a 4-byte checksum on top of bech32m: a mistyped or cut-off address is refused before anything is sent.</p>
+              <h2>On this device</h2>
+              <p>The seed is stored only in this browser, encrypted with your password (scrypt). Proofs are made locally and keys never leave the device. <b>Lock</b> clears them from memory.</p>
+            </article>
+
+            <article class="doc" data-doc="proofs" data-group="Concepts" data-title="Proofs" hidden>
+              <h1>Proofs</h1>
+              <p class="doc-lede">A private transaction is a zero-knowledge proof that you own the notes you spend and that the amounts add up.</p>
+              <h2>The transfer circuit</h2>
+              <p>Written in Noir and proved with UltraHonk, it spends two notes and creates two, all of one asset. It shows that:</p>
+              <ul>
+                <li>each spent note is in the tree under the given root and is not locked;</li>
+                <li>each nullifier belongs to its note;</li>
+                <li>the new commitments are well formed;</li>
+                <li>inputs equal outputs plus the amount taken out plus the fee.</li>
+              </ul>
+              <p>Unused slots hold zero-value notes that look the same on chain, so nobody can tell how many inputs and outputs were real or which output is change.</p>
+              <h2>Public inputs</h2>
+              <table class="doc-table">
+                <thead><tr><th>Input</th><th>Meaning</th></tr></thead>
+                <tbody>
+                  <tr><td><code>root</code></td><td>The tree state the proof refers to</td></tr>
+                  <tr><td><code>nf[2]</code></td><td>Nullifiers of the two spent notes</td></tr>
+                  <tr><td><code>cm[2]</code></td><td>Commitments of the two new notes</td></tr>
+                  <tr><td><code>now</code></td><td>Time used for lock checks; never later than the block</td></tr>
+                  <tr><td><code>asset</code></td><td>{token} or BNB</td></tr>
+                  <tr><td><code>publicOut</code></td><td>Amount leaving the pool (withdraw, swap, order)</td></tr>
+                  <tr><td><code>fee</code></td><td>Zero for wallet-submitted authorization packages</td></tr>
+                  <tr><td><code>extHash</code></td><td>Everything else the proof is bound to</td></tr>
+                </tbody>
+              </table>
+              <h2>What a proof is bound to</h2>
+<pre class="doc-code">extHash = keccak256(chainId, pool, recipient, relayer,
+                    caller, data, ciphertext0, ciphertext1) mod p</pre>
+              <p>The proof covers the public recipient, allowed submitting contract, contract parameters and both ciphertexts. A gas-paying wallet can submit it but cannot change any bound value or replay it on another chain or pool.</p>
+              <h2>Proving in the browser</h2>
+              <p>Proofs are made in your browser with Barretenberg (WebAssembly, multi-threaded). The proving parameters are served by this site and checked against a fixed SHA-256 before use. A proof is 8,000 bytes; the pool verifies it on chain.</p>
+            </article>
+
+            <article class="doc" data-doc="relayers" data-group="Concepts" data-title="Wallet submission" hidden>
+              <h1>Wallet submission</h1>
+              <p class="doc-lede">The protocol has no transaction relayer. A public wallet pays network gas, while the proof fixes the action.</p>
+              <h2>Submit now</h2>
+              <p>Connect any compatible public wallet. It signs the on-chain transaction and pays gas only; it does not receive private keys and cannot change the recipient, amounts, pool or call parameters.</p>
+              <h2>Package only</h2>
+              <p>Your private wallet creates a copyable authorization package without submitting it. On any device, open <b>Submit package</b>, inspect the values decoded against the current trusted configuration, connect a public wallet and submit.</p>
+              <p class="doc-hint">A package contains a proof and fixed call parameters, not a seed or pre-signed nonce transaction. Anyone holding it may submit that fixed action. Deleting the text does not revoke it.</p>
+              <h2>Requests in flight</h2>
+              <p>The wallet records exported and submitted actions before they leave the browser. Do not create the payment again while its outcome is unknown.</p>
+            </article>
+
+            <article class="doc" data-doc="mint" data-group="Using 404" data-title="Mint" hidden>
+              <h1>Mint</h1>
+              <p class="doc-lede">Every lot lands as a private note.</p>
+              <table class="doc-table">
+                <tbody>
+                  <tr><td>Lots</td><td>21,000</td></tr>
+                  <tr><td>Per lot</td><td>1,000 {token} · free on the NFT free-test deployment</td></tr>
+                  <tr><td>Per transaction</td><td>Exactly 1 lot</td></tr>
+                </tbody>
+              </table>
+              <h2>How it works</h2>
+              <p>For each lot, your wallet prepares a note for a private address and encrypts it; the pool adds the commitment to the tree and counts the lot. The receiving address is never shown, and it can be anyone's. Every lot looks the same on chain: the same amount and the same ciphertext length.</p>
+              <h2>Free Mint</h2>
+              <p>Your browser proves the authorized Mint and its private output. The actual submitting public wallet must hold the membership NFT, is limited to 10 mints and pays network gas only. Package-only mode creates the fixed authorization without requiring that wallet until submission.</p>
+              <p>On open-submission pools, any eligible public wallet can call the Mint router with the fixed package. The router submits the bound proof to the pool and cannot change its private output. Older wallet-bound Mint pools do not support portable Mint.</p>
+              <p class="doc-hint">The current pool is explicit; older deployments show their on-chain Mint price and access rules. They require enough funds already present in the selected private balance; this form no longer combines Mint with a public-wallet top-up.</p>
+            </article>
+
+            <article class="doc" data-doc="deposit" data-group="Using 404" data-title="Deposit and withdraw" hidden>
+              <h1>Deposit and withdraw</h1>
+              <p class="doc-lede">Move funds between a public wallet and your private balance.</p>
+              <h2>Deposit BNB first</h2>
+              <p>Send BNB with a deposit transaction from your public wallet; it becomes a BNB note. The depositing wallet pays the network gas.</p>
+              <h2>Deposit {token}</h2>
+              <p>A deposit transaction from your public wallet burns the {token} there and creates a private note for the same amount. The wallet pays only network gas in BNB.</p>
+              <h2>Withdraw</h2>
+              <p>Enter a public address and an amount. Your browser proves the spend; submit it with a connected public wallet or export a package for another device. The pool pays the whole {token} or BNB amount to the fixed public address.</p>
+              <table class="doc-table">
+                <thead><tr><th>Public</th><th>Hidden</th></tr></thead>
+                <tbody>
+                  <tr><td>The public address, asset and amount</td><td>Which notes paid or received it</td></tr>
+                </tbody>
+              </table>
+            </article>
+
+            <article class="doc" data-doc="send" data-group="Using 404" data-title="Send and merge" hidden>
+              <h1>Send and merge</h1>
+              <p class="doc-lede">Private transfers move value between notes without showing who paid whom.</p>
+              <h2>Send</h2>
+              <p>Choose an asset, a <code>4041</code> address, an amount and an optional memo. The wallet spends up to two notes, makes one note for the recipient and one for your change, and encrypts each.</p>
+              <p>When one note covers the payment, the wallet also folds a smaller loose note into the change, at no extra cost. Fewer notes means larger payments fit in one transaction.</p>
+              <h2>Merge</h2>
+              <p>A transaction spends at most two notes. <b>Merge</b> combines your two smallest notes of an asset into one.</p>
+              <h2>On chain</h2>
+              <table class="doc-table">
+                <thead><tr><th>Public</th><th>Hidden</th></tr></thead>
+                <tbody>
+                  <tr><td>Time, gas-paying wallet, asset, two nullifiers, two commitments, ciphertexts</td><td>Sender, private recipient, amount, how many inputs and outputs were real</td></tr>
+                </tbody>
+              </table>
+            </article>
+
+
+
+            <article class="doc" data-doc="market" data-group="Using 404" data-title="Market" hidden>
+              <h1>Market</h1>
+              <p class="doc-lede">Limit orders where the price is public and the trader is not.</p>
+              <h2>Listings and offers</h2>
+              <p>A <b>listing</b> sells {token} for BNB; an <b>offer</b> buys {token} with BNB. Prices are quoted per 1,000 {token}.</p>
+              <h2>Placing an order</h2>
+              <p>Your proof pays the amount you sell into the market contract and binds the price and a <b>maker</b>. The maker is a one-time order key derived from your seed:</p>
+<pre class="doc-code">pm/order-key/v2/&lt;chainId&gt;/&lt;market&gt;/&lt;i&gt;      (secp256k1)</pre>
+              <p>The maker address is public. The wallet derives order keys from your seed, so the same recovery words can recover your on-chain orders on another device.</p>
+              <h2>Filling</h2>
+              <p>Pay with private notes (the proof binds the order and your output note, and you receive a note) or from a public wallet. A fill rounds in the maker's favour and never takes more than what is left.</p>
+              <h2>Batch buying</h2>
+              <p>404 Market V2 can buy across up to 20 listings in one transaction, cheapest first. Review each selected order, the total payment, protocol fee and minimum received before submitting or exporting the fixed authorization package. A changed order requires a new review.</p>
+              <h2>Protocol fees</h2>
+              <p>The site reads the selected market's on-chain fee; it does not assume all deployments charge the same rate. 404 Market V2 charges both sides of each fill: the payer pays the trade amount plus its fee, and the maker receives the trade amount minus its fee. At 2% per side, a trade amount of 100 costs the payer 102 and credits the maker 98. Older immutable market rates remain unchanged.</p>
+              <p>Placing an order and cancelling its unfilled remainder do not incur this fill fee. Claiming proceeds does not charge it again. Network gas is separate.</p>
+              <h2>Claim and cancel</h2>
+              <p>The order key signs a typed <code>Release</code> message. A connected public wallet submits it and pays network gas; what is released returns as a private note.</p>
+              <h2>Minimums</h2>
+              <p>Amounts must fit the protocol's note units and the selected order's remaining balance. The site checks the current market terms and available notes before review; it does not apply old relayer minimums to wallet-submitted trades.</p>
+              <h2>Your orders after a restore</h2>
+              <p>Import the same recovery words and select the same network and market. The wallet checks order-key indices 0–9,999 in batches and matches their maker addresses to on-chain orders, including closed orders. Public maker addresses are cached for the current session to avoid repeating the derivation on every refresh.</p>
+              <p class="doc-hint">This restores on-chain orders within the 10,000-key range, not unsubmitted packages from another device. Reaching the range limit stops new order creation but does not hide recovered orders or prevent claiming and cancelling them.</p>
+              <h2>Personal transaction history</h2>
+              <p>Open Profile to see this wallet's complete recovered chain history and local requests. This includes its private notes and order activity, not the whole pool's or public Gas wallet's transaction feed. The same recovery words recover on-chain records, but a missing local journal cannot reveal old private recipients or intent that was never public. Unknown fields stay unknown; note receipts and spends can include change.</p>
+            </article>
+
+            <article class="doc" data-doc="privacy" data-group="Reference" data-title="Public and hidden" hidden>
+              <h1>Public and hidden</h1>
+              <p class="doc-lede">What each action shows on chain, side by side.</p>
+              <table class="doc-table">
+                <thead><tr><th>Action</th><th>Public</th><th>Hidden</th></tr></thead>
+                <tbody>
+                  <tr><td>Mint, NFT-gated</td><td>One lot, time, submitting wallet and its Mint count, commitment location</td><td>The private address that receives</td></tr>
+                  <tr><td>Send</td><td>Time, submitting wallet, asset, nullifiers, commitments</td><td>Sender, recipient, amount</td></tr>
+                  <tr><td>Deposit / Withdraw</td><td>Public address, asset, amount</td><td>Which note it is in the pool</td></tr>
+                  <tr data-archived="amm" hidden><td>Swap</td><td>Amounts in and out, time</td><td>Who swapped, who received</td></tr>
+                  <tr><td>Market</td><td>Size, price, order key, each fill</td><td>Who placed or filled it, who received</td></tr>
+                </tbody>
+              </table>
+              <h2>Getting the most from it</h2>
+              <ul>
+                <li>Privacy starts when a note is spent, and it grows with the number of people using the pool.</li>
+                <li>Give each payer a new address.</li>
+                <li>Move fresh mints and deposits after some other activity.</li>
+                <li>Pick amounts that do not equal a whole number of lots or a public deposit. The wallet points it out when one does.</li>
+              </ul>
+            </article>
+
+            <article class="doc" data-doc="sync" data-group="Reference" data-title="Sync and recovery" hidden>
+              <h1>Sync and recovery</h1>
+              <p class="doc-lede">Your balance is rebuilt from public chain data and your keys alone.</p>
+              <h2>Sync</h2>
+              <p>The wallet downloads the pool's <code>NoteAdded</code>, <code>Nullified</code>, <code>Transacted</code> and <code>Shielded</code> events, rebuilds the tree locally and tries every new note. The pool keeps a public list of blocks with activity, so only those blocks are fetched. No server is ever asked for a balance or a note.</p>
+              <h2>Checks</h2>
+              <p>After each sync the wallet compares its tree root, nullifier count, nullifier digest and transaction digest with the contract at the same block. If anything differs, it rebuilds from the deployment block.</p>
+              <h2>Recovery</h2>
+              <p>The 24 words and the chain bring back every note, your numbered addresses and your orders. Requests in flight are saved on the device, encrypted with a key derived from the seed for this chain and pool.</p>
+            </article>
+
+            <article class="doc" data-doc="contracts" data-group="Reference" data-title="Contracts" hidden>
+              <h1>Contracts</h1>
+              <p class="doc-lede">On BNB Smart Chain (chain 56 by default; test deployments use chain 97). No upgrades, and no admin key that can move funds.</p>
+              <table class="doc-table doc-contracts">
+                <thead><tr><th>Contract</th><th>Address</th></tr></thead>
+                <tbody>
+                  <tr><td>404 deployment</td><td>Loaded from the validated BSC deployment configuration at runtime.</td></tr>
+                </tbody>
+              </table>
+              <h2>Parameters</h2>
+              <table class="doc-table">
+                <tbody>
+                  <tr><td><code>LOT</code></td><td>1,000 {token}</td></tr>
+                  <tr><td><code>MAX_LOTS</code></td><td>21,000</td></tr>
+                  <tr><td><code>PRICE</code></td><td>0 on the free Mint pool; configured per older deployment</td></tr>
+                  <tr><td>Current Mint per transaction</td><td>1 lot</td></tr>
+                  <tr><td>Decimals</td><td>8</td></tr>
+                  <tr><td>BNB note unit</td><td>0.00000001 BNB (10<sup>10</sup> wei)</td></tr>
+                  <tr><td>Tree depth</td><td>32</td></tr>
+                  <tr><td>Ciphertext</td><td>172 bytes per note</td></tr>
+                  <tr data-archived="amm" hidden><td>Swap fee</td><td>0.3%</td></tr>
+                </tbody>
+              </table>
+              <h2>Supply checks</h2>
+              <p>Two equalities hold at every block, and every withdrawal is limited by its asset's balance in the pool:</p>
+<pre class="doc-code">{token}:  totalSupply + poolBalance[{token}] = mintedLots × LOT
+BNB: pool balance = poolBalance[BNB] × NATIVE_UNIT + mintProceeds</pre>
+            </article>
+
+            <nav class="doc-pager" id="doc-pager" aria-label="Previous and next"></nav>
+          </div>
+          <aside class="docs-toc" id="docs-toc" aria-label="On this page">
+            <p class="docs-toc-title">On this page</p>
+            <ul id="docs-toc-list"></ul>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="foot-inner">
+        <span>404 runs on BSC Mainnet with the reviewed 404 deployment.</span>
+      </div>
+    </footer>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <dialog id="order-dialog" class="sheet-dialog market-dialog" aria-labelledby="order-title">
+      <div class="dialog-head">
+        <h2 class="title" id="order-title">List {token}</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+        </button>
+      </div>
+      <form data-pane="order" class="action" id="order-form" autocomplete="off">
+        <label>Price<span class="opt"><span data-native>BNB</span> per 1,000 {token}</span><input name="price" inputmode="decimal" placeholder="0.001" /></label>
+        <label>Size<span class="opt" data-token>{token}</span><input name="amount" inputmode="decimal" placeholder="1,000" /></label>
+        <p class="field-hint" data-hint="order"><span></span><button type="button" class="text-btn" data-max hidden>Max</button></p>
+        <dl class="receipt" id="order-total"></dl>
+        <p class="needs-wallet" id="order-needs-wallet">Wallet locked<a class="text-btn" href="#/profile">Open wallet</a></p>
+        <button class="primary wide" id="order-submit">List privately</button>
+        <p class="error maskable" role="alert"></p>
+      </form>
+    </dialog>
+
+    <dialog id="fill-dialog" class="sheet-dialog market-dialog" aria-labelledby="fill-title">
+      <div class="dialog-head">
+        <h2 class="title" id="fill-title">Buy</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+        </button>
+      </div>
+      <form data-pane="fill" class="action" id="fill-form" autocomplete="off">
+        <p class="lead-note" id="fill-terms"></p>
+        <label><span id="fill-label">{token}</span><input name="amount" inputmode="decimal" placeholder="0" /></label>
+        <p class="field-hint" data-hint="fill"><span></span><button type="button" class="text-btn" data-max hidden>Max</button></p>
+        <dl class="receipt" id="fill-total"></dl>
+        <p class="needs-wallet" id="fill-needs-wallet">Wallet locked<a class="text-btn" href="#/profile">Open wallet</a></p>
+        <button class="primary wide" id="fill-submit">Buy privately</button>
+        <p class="error maskable" role="alert"></p>
+      </form>
+    </dialog>
+
+    <dialog id="authorization-dialog" class="sheet-dialog authorization-dialog" aria-labelledby="authorization-title">
+      <div class="dialog-head">
+        <h2 class="title" id="authorization-title">Submit authorization package</h2>
+        <button type="button" class="icon-btn" id="authorization-close" aria-label="Close">×</button>
+      </div>
+      <p class="muted small">Paste a package made on this website. It contains a proof and fixed call parameters, never recovery words or private keys.</p>
+      <label>Authorization package<textarea id="authorization-input" rows="7" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="404 authorization package"></textarea></label>
+      <dl class="kv" id="authorization-review" hidden></dl>
+      <p class="note warn" id="authorization-warning" hidden>Anyone holding this text can submit its already-fixed action. Deleting the text does not revoke it. Public recipients and amounts are shown above; private outputs remain proof-bound and unreadable.</p>
+      <p class="note" id="authorization-status"></p>
+      <p class="needs-payer" id="authorization-needs-payer">No gas-paying wallet connected<button type="button" class="text-btn" data-connect>Connect</button></p>
+      <div class="row end">
+        <button type="button" class="ghost" id="authorization-inspect">Inspect</button>
+        <button type="button" class="primary" id="authorization-submit" disabled>Review &amp; submit</button>
+      </div>
+      <p class="error" id="authorization-error" role="alert"></p>
+    </dialog>
+
+    <dialog id="authorization-export-dialog" class="sheet-dialog authorization-dialog" aria-labelledby="authorization-export-title">
+      <div class="dialog-head">
+        <h2 class="title" id="authorization-export-title">Authorization package ready</h2>
+        <button type="button" class="icon-btn" id="authorization-export-close" aria-label="Close">×</button>
+      </div>
+      <p class="muted small">Copy this text to another device. The receiving device can submit the fixed action with any compatible public wallet; the private wallet is not needed there.</p>
+      <textarea id="authorization-export" rows="7" readonly spellcheck="false"></textarea>
+      <p class="note warn">Anyone holding this text can submit its already-fixed action. Deleting it does not revoke it.</p>
+      <div class="row end"><button type="button" class="primary" id="authorization-copy">Copy package</button></div>
+    </dialog>
+
+    <dialog id="connect-dialog" class="sheet-dialog" aria-labelledby="connect-title">
+      <div class="dialog-head">
+        <h2 class="title" id="connect-title">Connect a wallet</h2>
+        <button type="button" class="icon-btn" id="connect-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+        </button>
+      </div>
+      <div id="payer-connect">
+        <ul id="wallet-list" class="wallet-list"></ul>
+        <p class="empty-box" id="no-wallet" hidden>No wallet found. Install <a href="https://www.okx.com/web3" target="_blank" rel="noopener noreferrer">OKX Wallet</a> and reload.</p>
+        <div id="local-accounts" class="local-accounts" hidden>
+          <p class="label">Local test accounts</p>
+          <p class="note">Disposable local devnet only. These accounts are unlocked on the node; never fund or use them on a public network.</p>
+          <div class="row">
+            <select id="local-account"></select>
+            <button type="button" class="small" id="use-local">Use</button>
+          </div>
+        </div>
+      </div>
+      <div id="payer-info" hidden>
+        <div class="account-head">
+          <span class="account-icon" id="payer-icon" aria-hidden="true"></span>
+          <div>
+            <p class="account-label" id="payer-label"></p>
+            <code id="payer-address"></code>
+          </div>
+        </div>
+        <dl class="kv">
+          <dt data-native>BNB</dt><dd><span class="maskable" id="payer-native">—</span></dd>
+          <dt data-token>{token}</dt><dd><span class="maskable" id="payer-token">—</span></dd>
+        </dl>
+        <div class="row">
+          <button type="button" class="small" data-copy="payer-address">Copy address</button>
+          <button type="button" class="small ghost" id="disconnect">Disconnect</button>
+        </div>
+      </div>
+      <p class="error" id="connect-error" role="alert"></p>
+    </dialog>
+
+    <dialog id="password-dialog">
+      <form method="dialog">
+        <p id="password-dialog-text">Enter the wallet password</p>
+        <input type="password" id="password-dialog-input" autocomplete="current-password" />
+        <div class="row end">
+          <button type="button" class="ghost" id="password-dialog-cancel">Cancel</button>
+          <button class="primary">OK</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="error-dialog" aria-labelledby="error-dialog-title">
+      <p class="kicker">404</p>
+      <h2 class="title" id="error-dialog-title">Unable to continue</h2>
+      <p class="error" id="error-dialog-message" role="alert"></p>
+      <div class="row end"><button type="button" class="primary" id="error-dialog-close">Close</button></div>
+    </dialog>
+
+    <dialog id="confirm-dialog" class="confirm" aria-labelledby="confirm-title">
+      <form method="dialog">
+        <p class="kicker" id="confirm-kicker"></p>
+        <h2 class="title" id="confirm-title"></h2>
+        <dl class="kv" id="confirm-rows"></dl>
+        <div class="disclose" id="confirm-disclose"></div>
+        <ul class="points" id="confirm-points"></ul>
+        <p class="note" id="confirm-mask-note" hidden></p>
+        <button type="button" class="small ghost" id="confirm-reveal" aria-pressed="false" hidden>Show details to check</button>
+        <div class="row end">
+          <button type="button" class="ghost" id="confirm-cancel" autofocus>Cancel</button>
+          <button class="primary" id="confirm-ok">Confirm</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
