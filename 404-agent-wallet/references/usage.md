@@ -158,6 +158,10 @@ protocol404 prepare void     --config FILE --wallet DIR --out NEW_FILE --journal
 
 For `prepare place`, both sides of a MarketV2 order must be strictly above dust. A token amount must be greater than `1_000_000_000` raw units (10 404), and a native amount must be greater than `10_000` note units (0.0001 BNB). The CLI rejects invalid amounts before unlocking and proving.
 
+### Market maker asset warning
+
+Maker assets may become permanently locked. Market cancellation and maker asset release currently accept ECDSA signatures only; ERC-1271 contract signatures and other contract authorization paths are unsupported. Do not place maker orders from a contract-controlled wallet unless it can later produce the required ECDSA signature.
+
 `prepare sweep` targets MarketV2 and accepts at most 20 fills. The generated `--fills-file` contains a JSON array in this shape; it is an internal adapter format, not user input. `orderId` and `pay` are raw integer strings:
 
 ```json
