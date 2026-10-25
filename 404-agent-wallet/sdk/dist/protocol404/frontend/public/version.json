@@ -1,0 +1,9 @@
+{
+  "releaseId": "404-source-20261024-ee4ac34",
+  "runId": "404-source-20261024080133-ac1282",
+  "default": "fresh",
+  "freshPool": "0x9EdB97746A1154e50A5D9ADfe19a38cA62FBEe62",
+  "commit": "ee4ac345b4879645962d4f9c5bce53310a053a46",
+  "chainId": 11155111,
+  "sourceOnly": true
+}
