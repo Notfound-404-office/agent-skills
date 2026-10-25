@@ -221,6 +221,12 @@ test("legacy withdrawal intents are presented with the Protocol 404 name", () =>
   });
 });
 
+test("deposit intent records the asset and note amount", () => {
+  assert.deepEqual(parseIntent({ kind: "deposit", asset: "1", amount: "250000" }), {
+    kind: "deposit", asset: "1", amount: "250000",
+  });
+});
+
 function fakeVoidSession(records, onVoid = async () => {}) {
   let values = records.map(record => ({ ...record }));
   let syncs = 0; let voids = 0;

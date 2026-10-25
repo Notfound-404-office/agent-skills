@@ -264,6 +264,18 @@ export class Protocol404Session {
     }, progress);
   }
 
+  /** Prepare a public-wallet deposit authorization; BAW supplies the native value when needed. */
+  async deposit(request: { amount: bigint; asset?: Asset }, progress: Progress = () => {}): Promise<Hex | undefined> {
+    const asset = request.asset ?? 0;
+    if (request.amount <= 0n || request.amount >= 1n << 64n) throw new RangeError('deposit amount');
+    const note = this.sealedNote(this.address, asset, request.amount);
+    return this.submitPrepared(
+      { kind: 'deposit', asset: String(asset), amount: request.amount.toString() }, '/shield',
+      { asset: String(asset), amount: request.amount.toString(), inner: note.inner.toString(), ciphertext: note.ciphertext },
+      [], [], false, progress,
+    );
+  }
+
   /** @orig index-CVtw0LZh.js:27355 jD.preparePrivateMint Pay native notes and receive private token lots. */
   async privateMint(
     request: { count: number; lot: bigint; priceWei: bigint; to?: PrivateAddress; wallet?: WalletClient; assertCurrent?: () => void },
@@ -525,7 +537,7 @@ export class Protocol404Session {
       }
       return undefined;
     }
-    const preferences = await this.feePreferences(this.quoteRequest(intent, Number(intent.asset) as Asset));
+    const preferences = path === '/shield' ? {} : await this.feePreferences(this.quoteRequest(intent, Number(intent.asset) as Asset));
     let hash: Hex;
     try {
       hash = await submitWalletAction(this.connection, wallet!, path, body, {
@@ -587,7 +599,7 @@ export class Protocol404Session {
     if (record.status === 'exported') {
       const wallet = this.getWallet();
       if (!wallet) throw new Error('Connect a public wallet to submit this exported authorization');
-      const preferences = await this.feePreferences(this.quoteRequest(record.intent, Number(record.intent.asset) as Asset));
+      const preferences = record.path === '/shield' ? {} : await this.feePreferences(this.quoteRequest(record.intent, Number(record.intent.asset) as Asset));
       progress('Confirm the exported authorization in your wallet');
       let hash: Hex;
       try {

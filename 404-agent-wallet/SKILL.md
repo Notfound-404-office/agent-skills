@@ -51,6 +51,8 @@ Use `balance.available` for unlocked, unreserved funds and `balance.max` for the
 
 Mint remains one lot per transaction and at most ten lots per submitting BAW address; that address must hold the membership NFT. Do not weaken these checks.
 
+For BAW-funded deposits, use `prepare deposit --amount AMOUNT --asset native|token`. The packet targets Pool `shield`; native deposits carry the exact BNB value encoded by the packet, while token deposits carry zero native value and require the BAW wallet to have token allowance. Inspect the target, asset, amount and value, then use the normal BAW preview and confirmation flow.
+
 MarketV2 orders use raw note units. Both sides must be strictly above dust: token amounts must be greater than `1_000_000_000` raw units (10 404), and native amounts must be greater than `10_000` note units (0.0001 BNB). The CLI rejects a smaller or equal amount before proving. For `fill`, `--sell-asset` names the asset being sold by the selected order; the CLI rereads the order and rejects a mismatch before proving.
 
 **Market maker asset warning:** this risk applies only when the maker uses a contract-controlled wallet that cannot later produce the required ECDSA signature. Ordinary EOA makers are not affected. Market order cancellation and maker asset release currently accept ECDSA signatures only; ERC-1271 contract signatures and other contract authorization paths are unsupported, so the maker's assets can otherwise become permanently locked.

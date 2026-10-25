@@ -3,6 +3,7 @@ import {
   zeroAddress, zeroHash, type Address, type Hex, type WalletClient,
 } from 'viem';
 import { marketV2, rawAbis } from '../abi/index.ts';
+import { nativeUnitWei } from '../config/index.ts';
 import { publicWriteFees, readNftMintAccess, type PoolConnection } from '../chain/client.ts';
 import { getConnectedWalletAccount, walletSigningAccount } from '../wallet/providers.ts';
 // Pure request validation is shared with the historical relay API; no server or signer code.
@@ -11,7 +12,7 @@ import {
   type PrivateTransaction,
 } from '../../../relayer/src/validators.ts';
 
-export type AuthorizationPath = '/relay' | '/mint' | '/order' | '/fill' | '/sweep' | '/release';
+export type AuthorizationPath = '/relay' | '/mint' | '/order' | '/fill' | '/sweep' | '/release' | '/shield';
 export type AuthorizationPacket = {
   protocol: '404-authorization'; version: 1; chainId: number; pool: Address;
   path: AuthorizationPath; body: unknown;
@@ -22,7 +23,7 @@ export type WalletSubmissionOptions = {
   onRejected?: () => Promise<void>;
   onStage?: (stage: 'simulating' | 'estimating' | 'wallet') => void;
 };
-const paths = new Set<string>(['/relay', '/mint', '/order', '/fill', '/sweep', '/release']);
+const paths = new Set<string>(['/relay', '/mint', '/order', '/fill', '/sweep', '/release', '/shield']);
 const maxPacketLength = 262_144;
 
 function txArgs(tx: PrivateTransaction) {
@@ -43,7 +44,7 @@ function normalize(connection: PoolConnection, path: string, input: unknown, por
   if (!paths.has(path)) throw new Error('Unsupported wallet authorization operation');
   const c = connection.config.contracts;
   const v2 = connection.config.marketVersion === 2;
-  let body: unknown, tx: PrivateTransaction | undefined, to: Address, data: Hex;
+  let body: unknown, tx: PrivateTransaction | undefined, to: Address, data: Hex, value = 0n;
   switch (path) {
     case '/relay': {
       tx = validateTransaction(input); body = tx; bind(tx, zeroAddress, zeroHash);
@@ -94,6 +95,21 @@ function normalize(connection: PoolConnection, path: string, input: unknown, por
         boughtInner: BigInt(s.boughtInner), boughtCiphertext: s.boughtCiphertext, restInner: BigInt(s.restInner), restCiphertext: s.restCiphertext,
       }] }); break;
     }
+    case '/shield': {
+      const deposit = input as { asset?: unknown; amount?: unknown; inner?: unknown; ciphertext?: unknown };
+      if (!deposit || !['0', '1'].includes(String(deposit.asset)) || !/^[0-9]+$/.test(String(deposit.amount ?? ''))
+        || !/^[0-9]+$/.test(String(deposit.inner ?? '')) || typeof deposit.ciphertext !== 'string'
+        || !/^0x(?:[0-9a-f]{2}){175}$/i.test(deposit.ciphertext)) throw new Error('Deposit authorization has invalid fields');
+      const asset = Number(deposit.asset), amount = BigInt(String(deposit.amount)), inner = BigInt(String(deposit.inner));
+      if (amount <= 0n || amount >= 1n << 64n || inner >= 21888242871839275222246405745257275088548364400416034343698204186575808495617n) {
+        throw new Error('Deposit authorization has invalid amount or inner');
+      }
+      body = { asset: String(asset), amount: amount.toString(), inner: inner.toString(), ciphertext: deposit.ciphertext };
+      to = c.pool;
+      data = encodeFunctionData({ abi: rawAbis.pool, functionName: 'shield', args: [asset, amount, inner, deposit.ciphertext as Hex] });
+      value = asset === 1 ? amount * nativeUnitWei : 0n;
+      break;
+    }
     default: {
       const value = validateRelease(input); body = value; const r = value.release;
       if (r.fee !== '0' || !isAddressEqual(r.relayer, zeroAddress)) throw new Error('Wallet authorizations must not pay a relayer');
@@ -108,7 +124,7 @@ function normalize(connection: PoolConnection, path: string, input: unknown, por
     if (!boundMint && !isAddressEqual(tx.ext.relayer, zeroAddress)) throw new Error('Authorization is bound to another submitting wallet');
     if (portable && tx.proof.length !== 16_002) throw new Error('Authorization must contain the complete 8000-byte proof');
   }
-  return { path: path as AuthorizationPath, body, tx, call: { to, data, value: 0n as const } };
+  return { path: path as AuthorizationPath, body, tx, call: { to, data, value } };
 }
 
 export function encodeWalletAction(connection: PoolConnection, path: string, body: unknown) {

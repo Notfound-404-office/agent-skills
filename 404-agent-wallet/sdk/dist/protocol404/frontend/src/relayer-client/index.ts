@@ -21,7 +21,7 @@ export type RelayerPricing = Readonly<{
   markupBps: 500;
 }>;
 
-export type RelayPath = '/relay' | '/order' | '/fill' | '/sweep' | '/mint' | '/bundle' | '/release';
+export type RelayPath = '/relay' | '/order' | '/fill' | '/sweep' | '/mint' | '/bundle' | '/release' | '/shield';
 
 export class RelayerHttpError extends Error {
   readonly status: number;

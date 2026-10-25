@@ -19,7 +19,7 @@ doctor                           Offline SDK/config/BAW executable checks
 wallet create|import|address     Encrypted private wallet (never returns recovery words)
 balance | orders | history       Read private balances, orders or wallet history
 quote sweep                      Quote human token amount / optional BNB budget; write fills
-prepare mint|send|withdraw|merge|place|fill|sweep|release|void
+prepare mint|send|withdraw|deposit|merge|place|fill|sweep|release|void
                                  Generate a fixed authorization packet, do not broadcast
 inspect                          Inspect a packet without printing proof/calldata
 baw preview                      Validate/simulate, then request BAW risk preview
@@ -69,7 +69,7 @@ export async function main(argv = process.argv.slice(2)) {
   let [command, subcommand, ...extra] = positionals;
   if (command === 'prepare' && subcommand === 'unshield') subcommand = 'withdraw'; // Accept the pre-404 command as input only.
   if (extra.length || (!['wallet','prepare','baw','quote'].includes(command) && subcommand)) throw new Error('INVALID_COMMAND');
-  const subcommands = { wallet: ['create', 'import', 'address'], prepare: ['mint', 'send', 'withdraw', 'merge', 'place', 'fill', 'sweep', 'release', 'void'], baw: ['preview', 'execute', 'status'], quote: ['sweep'] };
+  const subcommands = { wallet: ['create', 'import', 'address'], prepare: ['mint', 'send', 'withdraw', 'deposit', 'merge', 'place', 'fill', 'sweep', 'release', 'void'], baw: ['preview', 'execute', 'status'], quote: ['sweep'] };
   if (subcommands[command] ? !subcommands[command].includes(subcommand) : !['doctor', 'balance', 'orders', 'history', 'inspect'].includes(command)) throw new Error('INVALID_COMMAND');
   if (command === 'prepare' && subcommand === 'void' && !opts.journalId) throw new Error('missing journalId');
   if (command === 'prepare' && subcommand === 'fill' && opts.protocolFee === undefined) throw new Error('missing protocolFee');

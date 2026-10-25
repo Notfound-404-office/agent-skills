@@ -9,6 +9,7 @@ import { frontendAt, resolveSdkRoot } from "./runtime.mjs";
 const unresolved = new Set(["prepared", "exported", "unknown", "submitted"]);
 const intentFields = Object.freeze({
   send: ["asset", "amount", "recipient"],
+  deposit: ["asset", "amount"],
   unshield: ["asset", "amount", "recipient"],
   withdraw: ["asset", "amount", "recipient"],
   consolidate: ["asset"],
@@ -483,7 +484,7 @@ async function selectOrderKey(ctx, opts) {
 
 export async function prepareCommand(action, opts) {
   if (action === "unshield") action = "withdraw"; // Legacy CLI input only; new output stays Protocol 404 terminology.
-  if (!["mint", "send", "withdraw", "merge", "place", "fill", "sweep", "release", "void"].includes(action)) throw new Error(`unsupported prepare action: ${action}`);
+  if (!["mint", "send", "withdraw", "deposit", "merge", "place", "fill", "sweep", "release", "void"].includes(action)) throw new Error(`unsupported prepare action: ${action}`);
   if (action === "void") required(opts.journalId, "journalId");
   const root = await resolveSdkRoot(opts.root);
   opts = { ...opts, root };
@@ -535,6 +536,8 @@ export async function prepareCommand(action, opts) {
         await ctx.session.send({ to, amount: ctx.sdk.amount.parseNoteAmount(required(opts.amount, "amount")), asset: asset(opts.asset) });
       } else if (action === "withdraw") {
         await ctx.session.withdraw({ recipient: required(opts.to, "to"), amount: ctx.sdk.amount.parseNoteAmount(required(opts.amount, "amount")), asset: asset(opts.asset) });
+      } else if (action === "deposit") {
+        await ctx.session.deposit({ amount: ctx.sdk.amount.parseNoteAmount(required(opts.amount, "amount")), asset: asset(opts.asset) });
       } else if (action === "merge") {
         await ctx.session.consolidate({ asset: asset(opts.asset) });
       } else if (action === "place") {

@@ -146,6 +146,7 @@ Every prepare command requires `--config FILE --wallet DIR --out FILE` and optio
 protocol404 prepare mint     --config FILE --wallet DIR --out FILE
 protocol404 prepare send     --config FILE --wallet DIR --out FILE --to 404_ADDRESS --amount AMOUNT --asset token|native
 protocol404 prepare withdraw --config FILE --wallet DIR --out FILE --to EVM_ADDRESS --amount AMOUNT --asset token|native
+protocol404 prepare deposit --config FILE --wallet DIR --out FILE --amount AMOUNT --asset token|native
 protocol404 prepare merge    --config FILE --wallet DIR --out FILE --asset token|native
 protocol404 prepare place    --config FILE --wallet DIR --out FILE --sell-asset token|native --sell-amount RAW --buy-amount RAW [--key-index N]
 protocol404 prepare fill     --config FILE --wallet DIR --out FILE --order-id RAW --sell-asset token|native --pay RAW --protocol-fee RAW
