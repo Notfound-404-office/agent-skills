@@ -160,7 +160,7 @@ For `prepare place`, both sides of a MarketV2 order must be strictly above dust.
 
 ### Market maker asset warning
 
-Maker assets may become permanently locked. Market cancellation and maker asset release currently accept ECDSA signatures only; ERC-1271 contract signatures and other contract authorization paths are unsupported. Do not place maker orders from a contract-controlled wallet unless it can later produce the required ECDSA signature.
+This risk applies only when the maker uses a contract-controlled wallet that cannot later produce the required ECDSA signature. Ordinary EOA makers are not affected. Market cancellation and maker asset release currently accept ECDSA signatures only; ERC-1271 contract signatures and other contract authorization paths are unsupported, so the maker's assets can otherwise become permanently locked.
 
 `prepare sweep` targets MarketV2 and accepts at most 20 fills. The generated `--fills-file` contains a JSON array in this shape; it is an internal adapter format, not user input. `orderId` and `pay` are raw integer strings:
 
