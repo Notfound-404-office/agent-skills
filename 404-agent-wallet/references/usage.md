@@ -157,6 +157,8 @@ protocol404 prepare void     --config FILE --wallet DIR --out NEW_FILE --journal
 
 `--amount` accepts a human-readable integer or a decimal with at most eight fractional digits. Market fields `--sell-amount`, `--buy-amount`, `--pay`, `--min-bought`, and `--protocol-fee` are machine-level raw note units. In `prepare fill`, `--sell-asset` is the asset sold by the order, not the payment asset; the CLI rereads the selected order and rejects an asset mismatch before proving. The Agent handles exact eight-decimal conversion with BigInt and verified protocol data; the user supplies ordinary quantities and budgets. For batch purchases, use `quote sweep` below to generate these machine fields automatically. Never guess prices or fees, or ask the user to write raw-unit JSON.
 
+`prepare deposit` creates a Pool `shield` authorization for the local private address. A native deposit carries `amount × 10^10` wei as the packet value; a token deposit carries zero native value and requires the BAW wallet to have approved the Pool to spend the token.
+
 For `prepare place`, both sides of a MarketV2 order must be strictly above dust. A token amount must be greater than `1_000_000_000` raw units (10 404), and a native amount must be greater than `10_000` note units (0.0001 BNB). The CLI rejects invalid amounts before unlocking and proving.
 
 ### Market maker asset warning
