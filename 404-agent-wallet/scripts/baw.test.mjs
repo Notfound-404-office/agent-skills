@@ -49,7 +49,7 @@ test('preview uses exact official BSC flags and exposes risks without full calld
   const result = await previewBaw(f.opts, f.deps);
   assert.deepEqual(f.calls.find(args => args[0] === 'contract-call'), [
     'contract-call', 'preview', '--binanceChainId', '56', '--from', from,
-    '--to', target, '--value', '0', '--inputData', '0x12345678',
+    '--to', target, '--value', '0', '--inputData', '0x12345678', '--gasLimit', '10000000',
   ]);
   assert.deepEqual(result.risks.riskDetails, ['review-all-risks']);
   assert.deepEqual(result.simulationResult.authorityChanges, ['review-this']);

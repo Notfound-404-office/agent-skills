@@ -227,7 +227,7 @@ The adapter is restricted to BSC chain ID `56` and zero transaction value: BAW s
 baw contract-call preview --binanceChainId 56 --from ... --to ... --value ... --inputData ... --json
 ```
 
-It adds official `--gasLimit N` only when the user explicitly supplied `--gas-limit N`; never choose a custom gas limit automatically. Preview saves its bearer request state to a private file and does not execute.
+It passes the official `--gasLimit 10000000` by default so large proof calls do not fail on BAW's lower default. You can override it with `--gas-limit N`; the value must still cover the local estimate. Preview saves its bearer request state to a private file and does not execute.
 
 Before execution, show the user:
 

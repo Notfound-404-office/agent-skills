@@ -184,11 +184,10 @@ export async function previewBaw(opts, dependencies = {}) {
     const { gasEstimate } = await verify(opts, from);
     const args = ['contract-call', 'preview', '--binanceChainId', '56', '--from', from,
       '--to', inspected.call.to, '--value', inspected.call.value, '--inputData', inspected.call.data];
-    if (opts.gasLimit !== undefined) {
-      if (!/^\d+$/.test(opts.gasLimit) || BigInt(opts.gasLimit) < 21_000n || BigInt(opts.gasLimit) > 15_000_000n
-        || BigInt(opts.gasLimit) < BigInt(gasEstimate)) throw new Error('INVALID_BAW_GAS_LIMIT');
-      args.push('--gasLimit', opts.gasLimit);
-    }
+    const gasLimit = opts.gasLimit ?? '10000000';
+    if (!/^\d+$/.test(gasLimit) || BigInt(gasLimit) < 21_000n || BigInt(gasLimit) > 15_000_000n
+      || BigInt(gasLimit) < BigInt(gasEstimate)) throw new Error('INVALID_BAW_GAS_LIMIT');
+    args.push('--gasLimit', gasLimit);
     const preview = await run(args);
     validatePreview(preview);
     const expiresAt = expiry(preview.expiresAt);
