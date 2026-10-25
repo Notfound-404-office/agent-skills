@@ -1,0 +1,48 @@
+{
+  "chainId": 56,
+  "rpcUrl": "https://bsc-dataseed.bnbchain.org",
+  "deployment": {
+    "404Pool": "0x0496E2c68975d10009457A08dAc87FC3f0788708",
+    "404Token": "0x62e0A523590558991cd6B24c0A81511Cbe5cB3EE",
+    "404Hasher": "0x33Da9feC0E3e3C556c529eeE8f829c5BCD2af8C3",
+    "404Mint": "0x4D606921999525B9C3e8C24D31e8C1DDec1e9724",
+    "404Market": "0xe3Af86F2CDA3148858c8B30a5229136Bc6E07c35",
+    "404Bundle": "0xcBB4624ecDFF86DBa9A18E016d409C3DCfe83dfC",
+    "404TransferVerifier": "0xe82483A69aF51870EDB7930be5b038113CA3E148",
+    "404HoldVerifier": "0xe768218c5Da45BB2526a2680aA5014a9489f4942",
+    "MembershipNFT": "0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F",
+    "TransferRelationsLib": "0x44c395590dAb1bd98a8957FCDeCB19e1A8cFa99f",
+    "TransferTranscriptLib": "0xe22AAaDb1Dc40d6A80aFd840c1B1941D92B287f4",
+    "HoldRelationsLib": "0xdB2d5ae5aB0bE0147f90e0c6b46401D3DE177cA7",
+    "HoldTranscriptLib": "0xc9993985655b307eBEe9097fB1CC8FC4c03411d2",
+    "404BatchView": "0x3d70156753e472f80F14C2d6aC29dC20967Bf7e4"
+  },
+  "deployBlock": "129580088",
+  "marketBlock": "129580099",
+  "tokenName": "404",
+  "tokenSymbol": "404",
+  "signingProfiles": {
+    "pool": "404",
+    "market": "404"
+  },
+  "mintPolicy": {
+    "mode": "nft-self",
+    "nft": "0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F",
+    "submission": "open",
+    "free": true,
+    "maxPerTransaction": 1,
+    "maxPerSubmitter": 10
+  },
+  "marketVersion": 2,
+  "protocol": {
+    "assetIdBits": 32,
+    "noteVersion": 3,
+    "ciphertextBytes": 175
+  },
+  "treasury": "0xD851F50FE148AD9bFc922ce69612A239E0F7244A",
+  "guardian": "0xa73D31A04ab36E27283aa1a53Ec5654a95e82fBC",
+  "marketFeeBps": 200,
+  "deploymentRunId": "404-bsc-u32-cex-20261025",
+  "verification": "bsc-u32-cex-20261025",
+  "deployer": "0xDB622B7eD50c916B63a192506a13DCDCbd47C19b"
+}
