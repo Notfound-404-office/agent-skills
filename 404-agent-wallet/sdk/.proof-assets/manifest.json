@@ -1,0 +1,56 @@
+[
+  {
+    "paths": [
+      "dist/protocol404/frontend/public/assets/acvm_js_bg-BawCIsJQ.wasm",
+      "web-ref/assets/acvm_js_bg-BawCIsJQ.wasm"
+    ],
+    "source": ".proof-assets/f5916dd3dbbe6f15abaa4cb6b10a04714621f9389e898d11001b701cd3e4813f/acvm_js_bg-BawCIsJQ.wasm",
+    "size": 3049596,
+    "sha256": "f5916dd3dbbe6f15abaa4cb6b10a04714621f9389e898d11001b701cd3e4813f"
+  },
+  {
+    "paths": [
+      "dist/protocol404/frontend/public/assets/barretenberg-Bwi_mQhV.js",
+      "web-ref/assets/barretenberg-Bwi_mQhV.js"
+    ],
+    "source": ".proof-assets/01835ad6c6aafef7bad52ffd4aeecc86688f58bf71cb0239cd77837f97305c8a/barretenberg-Bwi_mQhV.js",
+    "size": 4139359,
+    "sha256": "01835ad6c6aafef7bad52ffd4aeecc86688f58bf71cb0239cd77837f97305c8a"
+  },
+  {
+    "paths": [
+      "dist/protocol404/frontend/public/assets/barretenberg-threads-CQu7x8-M.js",
+      "web-ref/assets/barretenberg-threads-CQu7x8-M.js"
+    ],
+    "source": ".proof-assets/1e4b42324572915afdb3766dbeccc80bc1bcd84ac401ce735895ea40ed38ee86/barretenberg-threads-CQu7x8-M.js",
+    "size": 4095247,
+    "sha256": "1e4b42324572915afdb3766dbeccc80bc1bcd84ac401ce735895ea40ed38ee86"
+  },
+  {
+    "paths": [
+      "dist/protocol404/frontend/public/assets/noirc_abi_wasm_bg-VozwQxgy.wasm",
+      "web-ref/assets/noirc_abi_wasm_bg-VozwQxgy.wasm"
+    ],
+    "source": ".proof-assets/4f7b66c992a9ea0ca3f36c4d59018f762a46e7df053de318354fda064ed05664/noirc_abi_wasm_bg-VozwQxgy.wasm",
+    "size": 659396,
+    "sha256": "4f7b66c992a9ea0ca3f36c4d59018f762a46e7df053de318354fda064ed05664"
+  },
+  {
+    "paths": [
+      "dist/protocol404/frontend/public/crs/bn254_g1_compressed_131072.dat",
+      "web-ref/crs/bn254_g1_compressed_131072.dat"
+    ],
+    "source": ".proof-assets/fad8203ae1fd103658d4bb33b2b4cf126a28352b5de4684737cff23cc15fb94b/bn254_g1_compressed_131072.dat",
+    "size": 4194304,
+    "sha256": "fad8203ae1fd103658d4bb33b2b4cf126a28352b5de4684737cff23cc15fb94b"
+  },
+  {
+    "paths": [
+      "dist/protocol404/frontend/public/crs/bn254_g2.dat",
+      "web-ref/crs/bn254_g2.dat"
+    ],
+    "source": ".proof-assets/01797bfc4de5a96f0e516a9ea4537d18786dc30cb991aca4274c95822b69c32f/bn254_g2.dat",
+    "size": 128,
+    "sha256": "01797bfc4de5a96f0e516a9ea4537d18786dc30cb991aca4274c95822b69c32f"
+  }
+]
