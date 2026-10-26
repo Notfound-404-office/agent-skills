@@ -1,0 +1,24 @@
+{
+  "noir_version": "1.0.0-beta.25+75061fab15986eedee4e7d9104ff87dd9fa4ca10",
+  "files": {
+    ".nargo-version": "8330824680e204f14c1278d1f7aff77506a4e4e7fff4c66dfd9ba669fac69b5b",
+    "Nargo.toml": "b4919c71bb33257b6e7eaf6e63b7d757b0de79d6e7101df6cf9faf0b8e7cc8c0",
+    "hold/Nargo.toml": "97fc1a971770c0c98b6c2e5d73944bb4a1a1641d325eea95d529a4a67007b070",
+    "hold/src/main.nr": "ffea0b30f130fc5ce888ea59d4770a1e588f444988de542df005bc56f548752e",
+    "pm_lib/Nargo.toml": "80915bd091396abbc188703163341a044da3ce09d9af35f576a333955fcea70e",
+    "pm_lib/src/domains.nr": "fdbd91dcdbe34fd472e4093a159a37156412099615a070a9a489b9bb530b9c73",
+    "pm_lib/src/hash.nr": "ca29df410b93fdf8a92ac40220e61b1454ba4a31f27c4691ab8bee2631950b50",
+    "pm_lib/src/lib.nr": "386a2d7f5f6587a3d3248d782066e13b58a53c4390b45e906c2240c76a93b305",
+    "reference/bundles/hold-KmcNW90K.js": "e5fae096d54944d7dc1d8b5a782a57c9863c030fb24a164a9cf8b8c393bab05c",
+    "reference/bundles/transfer-BxYyEYeL.js": "5fed80bfb8b27be47648d6f37cf31b5432db71c587293bfb83f405156b3c18c1",
+    "reference/domains.nr": "fdbd91dcdbe34fd472e4093a159a37156412099615a070a9a489b9bb530b9c73",
+    "reference/hold.json": "da1df477242958f1fd0312fe9010483bd8d48b7ab09d4d7a44e1a87c39e5776d",
+    "reference/stdlib/hash.nr": "e453cef56700642410e90d45fc9610f32a97b1690f060f1c12cc9d6cef07c343",
+    "reference/transfer.json": "1e6186816a2b8efcab146b304b3f8ad165d39e3cb544207d87826d3c8aff5c94",
+    "toolchain.json": "4bb5ccddb75a898abd6e9d48f394efe92c099151fb0716c417debece51f41df2",
+    "tools/jslit.py": "e655b6e1ab373ab2d960bda75b53bb54e89c73cd5b506e9d67149539fd4901f9",
+    "transfer/Nargo.toml": "8a29386b3d757545b3f14c8dc3dd304b673dfb93dabda4c13c6e01c95423743c",
+    "transfer/src/main.nr": "b1cc6a2f90a0cdde15673936798e66d5b5beb7f11c3b19843b6e5417374e3fa3"
+  },
+  "limits": "Circuit artifact identity is checked; source provenance is intentionally omitted from the public package."
+}
