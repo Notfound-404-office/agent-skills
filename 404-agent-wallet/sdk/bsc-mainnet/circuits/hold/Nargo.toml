@@ -1,0 +1,7 @@
+[package]
+name = "hold"
+type = "bin"
+authors = []
+
+[dependencies]
+pm_lib = { path = "../pm_lib" }

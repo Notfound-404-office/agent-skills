@@ -1,0 +1,4 @@
+interface:
+  display_name: "404 Agent Wallet"
+  short_description: "Prepare private 404 actions and submit them safely"
+  default_prompt: "Use $404-agent-wallet to prepare and inspect a Protocol 404 action, then follow the Binance Agentic Wallet preview and confirmation flow if I request submission."
