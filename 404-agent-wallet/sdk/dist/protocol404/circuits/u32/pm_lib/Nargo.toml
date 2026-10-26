@@ -1,0 +1,4 @@
+[package]
+name = "pm_lib"
+type = "lib"
+authors = []
