@@ -1,0 +1,11 @@
+{
+  "name": "protocol404-agent-wallet-skill",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Tool-calling Bot skill: local encrypted 404 wallet, ZK preparation and BAW risk-reviewed submission",
+  "bin": { "protocol404": "scripts/404.mjs" },
+  "scripts": { "test": "node --experimental-strip-types --test scripts/*.test.mjs" },
+  "engines": { "node": ">=22.14.0" },
+  "license": "ISC"
+}
