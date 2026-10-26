@@ -1,0 +1,2 @@
+[workspace]
+members = ["transfer", "hold", "pm_lib"]
